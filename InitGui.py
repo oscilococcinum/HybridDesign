@@ -32,6 +32,7 @@ class PDExtended(Gui.Workbench):
         from ShapeFillet.Command import Command as ShapeFilletCommand
         from SplitSurface.Command import Command as SplitSurfaceCommand
         from Extrapolate.Command import Command as ExtrapolateCommand
+        from Join.Command import Command as JoinCommand
 
         features: dict[str, list[str]] = {
             "Solid": ["PartDesign_Body",
@@ -66,7 +67,8 @@ class PDExtended(Gui.Workbench):
                         BoundaryCommand.getCommandName(),
                         ShapeFilletCommand.getCommandName(),
                         SplitSurfaceCommand.getCommandName(),
-                        ExtrapolateCommand.getCommandName(),],
+                        ExtrapolateCommand.getCommandName(),
+                        JoinCommand.getCommandName(),],
             "Wireframe": [CurvedHelixCommand.getCommandName(),],
                           #PararellCurveCommand.getCommandName()],
             "Selection": [TangencySelectionCommand.getCommandName(),
