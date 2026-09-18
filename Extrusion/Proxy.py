@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard
+#pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from typing import Protocol, Literal
-import FreeCAD as App #type: ignore
+import FreeCAD as App
 from utils.PropDef import PropDef, PropertyBool, PropertyLinkSubList, PropertyLinkSub, PropertyStringList, PropertyFloat, PropertyEnumeration
 from utils.FreeCADInterfaces import FeatureLike, ShapeLike
 from utils.EdgeDef import EdgeDef
 from utils.utils import getSelectionEx
-from Part import Compound #type: ignore
+from Part import Compound, makeShell
 
 FEATURE_NAME = "Extrusion"
 
@@ -45,12 +45,14 @@ class Proxy:
                 if obj.ReverseMagnitude != 0.0:
                     revResult = currentShape.extrude(App.Vector(dirDict[obj.Direction]) * -obj.ReverseMagnitude)
                     for face in revResult.Faces:
+                        face.reverse()
                         result.add(face)
             case "Vector":
                 result: ShapeLike = currentShape.extrude(App.Vector([float(i) for i in obj.Vector]).normalize() * obj.ReverseMagnitude)
                 if obj.ReverseMagnitude != 0.0:
                     revResult = currentShape.extrude(App.Vector([float(i) for i in obj.Vector]).normalize() * -obj.ReverseMagnitude)
                     for face in revResult.Faces:
+                        face.reverse()
                         result.add(face)
             case "Custom":
                 sourceObj, subName = obj.CustomDirRef
@@ -61,8 +63,10 @@ class Proxy:
                 if obj.ReverseMagnitude != 0.0:
                     revResult = currentShape.extrude(dir * -obj.ReverseMagnitude)
                     for face in revResult.Faces:
+                        face.reverse()
                         result.add(face)
 
+        result = makeShell(result.Faces)
 
         if obj.CheckShape:
             result.check()
