@@ -59,7 +59,7 @@ class Proxy:
             nextt2 = ptsFaces[i][0][-1]
             d = [(prev1 - nextt1).Length, (prev1 - nextt2).Length,
                  (prev2 - nextt1).Length, (prev2 - nextt2).Length]
-            
+
             dimin = d.index(min(d))
 
             if dimin == 0:
@@ -98,20 +98,20 @@ class Proxy:
         for s, e, edge, (pts, face) in zip(startPts, endPts, selectedEdges, ptsFaces):
             bss = BSplineSurface()
             transposed = [list(row) for row in zip(s, e)]
-            
+
             match obj.Algorythm:
                 case "Loft":
                     bsc = BSplineCurve()
                     bsc.interpolate(e)
                     endShape = bsc.toShape()
                     loft: ShapeLike = makeLoft([endShape, edge.edge])
-                    
+
                     uvs: list[tuple[float, float]] = [loft.Faces[0].Surface.parameter(x) for x in s]
                     normals = all([face.topoFace.normalAt(*x).dot(loft.Faces[0].normalAt(*x)) > 0 for x in uvs])
 
                     if not normals:
                         loft.reverse()
-                    
+
                     resList.append(loft.Faces[0])
 
                 case "Interpolate":
@@ -119,25 +119,25 @@ class Proxy:
                     shape = bss.toShape()
                     uvs: list[tuple[float, float]] = [shape.Surface.parameter(x) for x in s]
                     normals = all([face.topoFace.normalAt(*x).dot(shape.normalAt(*x)) > 0 for x in uvs])
-                    
+
                     if not normals:
                         shape.reverse()
 
                     resList.append(shape)
-                    
+
                 case "Approximate":
                     bss.approximate(transposed, Tolerance=obj.ApproxTol)
                     shape = bss.toShape()
                     uvs: list[tuple[float, float]] = [shape.Surface.parameter(x) for x in s]
                     normals = all([face.topoFace.normalAt(*x).dot(shape.normalAt(*x)) > 0 for x in uvs])
-                    
+
                     if not normals:
                         shape.reverse()
 
                     resList.append(shape)
                 case _:
                     raise RuntimeError("No valid extrapolation algo selected!")
-            
+
         if obj.Fuse:
             resList.append(surr)
             compResult = connect(resList)
