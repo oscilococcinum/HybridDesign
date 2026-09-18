@@ -26,7 +26,7 @@ class Proxy:
     def execute(self, obj: CurrentFeatureLike):
         if not obj.Shapes:
             obj.Shapes = getSelectionEx()
-            
+
             shapesT: tuple[list[FeatureLike], list[list[str]]] = tuple(list(row) for row in zip(*obj.Shapes)) #type: ignore
             for x in shapesT[0]:
                 x.Visibility = False

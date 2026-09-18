@@ -57,7 +57,7 @@ class Proxy:
 
         if obj.Fillet:
             result = result.makeFillet(obj.Radius, [e.edge for e in edgesToFillet])
-        
+
         if obj.CheckShape:
             result.check()
         obj.Shape = result
