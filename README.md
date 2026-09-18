@@ -2,21 +2,9 @@
 
 Custom FreeCAD Workbench for advanced modeling and OCCT-powered geometry creation. It was inspired by the capabilities of the CATIA V5 GSD Workbench.
 Since CATIA has a well-known and established surfacing workflow, it might (or might not) be a good idea, to bring some of those features into FreeCAD.
+WB is in Alpha stage.
 
 <img src="/Assets/HybridDesignWorkbench.svg" width="128"/>
-
-## Overview
-
-This workbench extends FreeCAD with the following features:
-
-- AutoFillet
-- Boundary
-- CutSolid
-- Defeature (Parametric)
-- Surface Extrusion
-- Extract
-
----
 
 ## Features
 
@@ -183,6 +171,7 @@ Cuts first selected surface with second as cutting tool.
 #### Supported Inputs
 
 - Faces/Surfaces
+
 ---
 
 ### ShapeFillet
@@ -197,6 +186,21 @@ WIP! Surfaces have to idealy intersect !
 #### Supported Inputs
 
 - Faces/Surfaces
+
+---
+
+### Extrapolate
+
+<img src="/Assets/Extrapolate_HybridDesign.svg" width="64"/>
+
+![Extrapolate gif](docs/gifs/extrapolate.gif)
+
+Extrapolates shell based on selectet boundary (list of edges).
+WIP! Gaps betwen extrapolated surfaces are not filled.
+
+#### Supported Inputs
+
+- Edges
 
 ### CurvedHelix
 
