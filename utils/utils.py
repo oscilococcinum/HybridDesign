@@ -143,4 +143,30 @@ def newNormalOnShell(shell: ShapeLike, point: Vector) -> Vector:
     normal = bestFace.normalAt(uv[0], uv[1])
     normal.normalize()
 
-    return normal#, bestPoint, bestFace
+    return normal  # , bestPoint, bestFace
+
+
+def sortDiscEdgesPoints(discEdges: list[list[Vector]]) -> None:
+    for i in range(1, len(discEdges)):
+        prev1 = discEdges[i - 1][-1]
+        prev2 = discEdges[i - 1][0]
+        nextt1 = discEdges[i][0]
+        nextt2 = discEdges[i][-1]
+        d = [
+            (prev1 - nextt1).Length,
+            (prev1 - nextt2).Length,
+            (prev2 - nextt1).Length,
+            (prev2 - nextt2).Length,
+        ]
+
+        dimin = d.index(min(d))
+
+        if dimin == 0:
+            pass
+        if dimin == 1:
+            discEdges[i].reverse()
+        if dimin == 2:
+            discEdges[i - 1].reverse()
+        if dimin == 3:
+            discEdges[i].reverse()
+            discEdges[i - 1].reverse()
