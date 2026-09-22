@@ -1,12 +1,11 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard
+#pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from typing import Self, Literal
-from Part import Edge, Face, Vertex #type: ignore
+from Part import Edge, Face, Vertex
 from utils.EdgeDef import EdgeDef
 from utils.FaceDef import FaceDef
 from utils.FreeCADInterfaces import Vector
 from math import acos, degrees
-from utils.utils import timing
 import numpy as np
 
 

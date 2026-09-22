@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard
+#pyright: standard, reportUnusedImport=error, reportMissingImports=information
 import FreeCADGui as Gui #type: ignore
 from utils.FreeCADInterfaces import ShapeLike
-from utils.FaceWalker import FaceWalker
+from utils.Walker import FaceWalker
 from utils.utils import getReferencedShapes, getSelectionEx
 
 FEATURE_NAME = "EnclosedSelection"

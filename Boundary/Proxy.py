@@ -1,13 +1,12 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard
+#pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from typing import Protocol
-from Part import Compound #type:ignore
+from Part import Compound 
 from utils.PropDef import PropDef, PropertyBool, PropertyFloat, PropertyInteger, PropertyLinkSubList
 from utils.FreeCADInterfaces import FeatureLike, ShapeLike
 from utils.FaceGraph import getFaceEdgeNameMap, reverseFaceToEdgeMap
 from utils.utils import getSelectionEx
 from utils.EdgeDef import EdgeDef
-from utils.FaceDef import FaceDef
 
 FEATURE_NAME = "Boundary"
 

@@ -1,14 +1,11 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard
-from typing import Protocol, Literal
-from Part import makeShell, BSplineCurve #type: ignore
-import FreeCAD as App #type: ignore
-import FreeCADGui as Gui# type: ignore
-from utils.PropDef import PropDef, PropertyLinkSubList, PropertyBool, PropertyLength, PropertyInteger, PropertyFloat, PropertyAngle
+#pyright: standard, reportUnusedImport=error, reportMissingImports=information
+from typing import Protocol
+from Part import BSplineCurve
+import FreeCAD as App
+from utils.PropDef import PropDef, PropertyLinkSubList, PropertyBool, PropertyLength, PropertyInteger, PropertyFloat
 from utils.FreeCADInterfaces import FeatureLike, ShapeLike, Vector
-from utils.FaceGraph import getFaceEdgeNameMap, buildFaceGraph
-from utils.FaceWalker import FaceWalker
-from utils.utils import getReferencedShapes, getSelectionEx
+from utils.utils import getSelectionEx
 from utils.utils import timing
 import math
 

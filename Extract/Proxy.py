@@ -1,11 +1,10 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard
+#pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from typing import Protocol, Literal
 from Part import makeShell #type: ignore
 from utils.PropDef import PropDef, PropertyLinkSubList, PropertyBool, PropertyEnumeration, PropertyFloat, PropertyInteger
 from utils.FreeCADInterfaces import FeatureLike, ShapeLike
-from utils.FaceGraph import getFaceEdgeNameMap, buildFaceGraph
-from utils.FaceWalker import FaceWalker
+from utils.Walker import FaceWalker
 from utils.utils import getReferencedShapes, getSelectionEx
 from utils.utils import timing
 

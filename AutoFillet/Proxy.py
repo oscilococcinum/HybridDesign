@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard
+#pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from typing import Protocol, Literal
-import FreeCADGui as Gui #type: ignore
-import FreeCAD as App #type: ignore
 from utils.PropDef import PropDef, PropertyEnumeration, PropertyFloat, PropertyStringList, PropertyLength, PropertyBool
 from utils.FreeCADInterfaces import FeatureLike, ShapeLike
 from utils.EdgeDef import EdgeDef

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard
+#pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from typing import Protocol
 from Part import makeSolid #type: ignore
 from utils.PropDef import PropDef, PropertyBool, PropertyLinkSubList, PropertyFloat, PropertyEnumeration

@@ -3,7 +3,7 @@
 from utils.FreeCADInterfaces import ShapeLike
 from collections import defaultdict
 from dataclasses import dataclass
-from utils.LazyShapeDict import LazyFaceDict, LazyEdgeDict
+from utils.LazyShapeDict import LazyFaceDict, LazyEdgeDict, LazyVertDict
 from functools import cached_property
 
 
@@ -108,3 +108,23 @@ class FaceWalker:
 
         return list(visited)
 
+
+@dataclass
+class EdgeWalker:
+    currentShape: ShapeLike
+
+    def __post_init__(self) -> None:
+        self.HashToVert = LazyVertDict(self.currentShape.Vertexes)
+        self.HashToEdge = LazyEdgeDict(self.currentShape.Edges)
+
+    @cached_property
+    def EdgeToEdge(self) -> dict[int, list[int]]:
+        ...
+
+    def checkTan(self, faceHashed: int, edgeHashed: int, nextFaceHashed: int, angle_tol: float = 1e-3, samples: int = 5) -> bool: 
+        if not (edge := self.HashToEdge[edgeHashed].edge): raise RuntimeError("No hashcode in current edge container")
+
+        ...
+
+    def walkTangent(self, startEdge: int, angleTol: float=1e-6) -> list[int]:
+        ...

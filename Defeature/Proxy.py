@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard
+#pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from typing import Protocol
 from utils.PropDef import PropDef, PropertyLinkSubList, PropertyBool
 from utils.FreeCADInterfaces import FeatureLike, ShapeLike
