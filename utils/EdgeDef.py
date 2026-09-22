@@ -1,9 +1,8 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #pyright: standard, reportUnusedImport=error, reportMissingImports=information
-from FreeCAD import Vector
 from dataclasses import dataclass, field
 from functools import cached_property
-from .FreeCADInterfaces import ShapeLike
+from .FreeCADInterfaces import ShapeLike, Vector
 
 
 @dataclass

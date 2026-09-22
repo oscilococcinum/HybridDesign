@@ -118,13 +118,68 @@ class EdgeWalker:
         self.HashToEdge = LazyEdgeDict(self.currentShape.Edges)
 
     @cached_property
-    def EdgeToEdge(self) -> dict[int, list[int]]:
-        ...
+    def EdgesToVerts(self) -> dict[int, list[int]]:
+        return {x.hashCode(): [y.hashCode() for y in x.Vertexes] for x in self.currentShape.Edges}
 
-    def checkTan(self, faceHashed: int, edgeHashed: int, nextFaceHashed: int, angle_tol: float = 1e-3, samples: int = 5) -> bool: 
-        if not (edge := self.HashToEdge[edgeHashed].edge): raise RuntimeError("No hashcode in current edge container")
+    @cached_property
+    def VertToEdge(self) -> dict[int, list[int]]:
+        vertToEdges: dict[int, list[int]] = defaultdict(list)
 
-        ...
+        for edge, verts in self.EdgesToVerts.items():
+            for vert in verts:
+                vertToEdges[vert].append(edge)
 
-    def walkTangent(self, startEdge: int, angleTol: float=1e-6) -> list[int]:
-        ...
+        return vertToEdges
+
+    def checkTan(self, edgeHashed: int, nextEdgeHashed: int, angle_tol: float=1e-3) -> bool: 
+        if not (edge := self.HashToEdge[edgeHashed]): raise RuntimeError("No hashcode in current edge container")
+        if not (nextEdge := self.HashToEdge[nextEdgeHashed]): raise RuntimeError("No hashcode in current edge container")
+
+        conChecks = [
+            (edge.startVec() - nextEdge.startVec()).Length,
+            (edge.startVec() - nextEdge.endVec()).Length,
+            (edge.endVec() - nextEdge.startVec()).Length,
+            (edge.endVec() - nextEdge.endVec()).Length
+        ]
+
+        i = conChecks.index(min(conChecks))
+        match i:
+            case 0:
+                eT = edge.edge.tangentAt(edge.edge.FirstParameter)
+                neT = nextEdge.edge.tangentAt(nextEdge.edge.FirstParameter)
+                return 1.0 - angle_tol < abs(eT.dot(neT)) < 1.0 + angle_tol
+            case 1:
+                eT = edge.edge.tangentAt(edge.edge.FirstParameter)
+                neT = nextEdge.edge.tangentAt(nextEdge.edge.LastParameter)
+                return 1.0 - angle_tol < abs(eT.dot(neT)) < 1.0 + angle_tol
+            case 2:
+                eT = edge.edge.tangentAt(edge.edge.LastParameter)
+                neT = nextEdge.edge.tangentAt(nextEdge.edge.FirstParameter)
+                return 1.0 - angle_tol < abs(eT.dot(neT)) < 1.0 + angle_tol
+            case 3:
+                eT = edge.edge.tangentAt(edge.edge.LastParameter)
+                neT = nextEdge.edge.tangentAt(nextEdge.edge.LastParameter)
+                return 1.0 - angle_tol < abs(eT.dot(neT)) < 1.0 + angle_tol
+            case _:
+                raise RuntimeError("Cannot check tangency!")
+
+    def walkTangent(self, startEdge: int, angleTol: float=1e-3) -> list[int]:
+        visited: set[int] = {startEdge}
+        stack: list[int] = [startEdge]
+
+        while stack:
+            edge = stack.pop()
+
+            for iEdge in self.EdgesToVerts.get(edge, []):
+                for otherEdge in self.VertToEdge[iEdge]:
+
+                    if otherEdge in visited:
+                        continue
+
+                    if not self.checkTan(edge, otherEdge, angleTol):
+                        continue
+
+                    visited.add(otherEdge)
+                    stack.append(otherEdge)
+
+        return list(visited)
