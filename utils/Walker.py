@@ -143,25 +143,29 @@ class EdgeWalker:
         ]
 
         i = conChecks.index(min(conChecks))
-        match i:
-            case 0:
-                eT = edge.edge.tangentAt(edge.edge.FirstParameter)
-                neT = nextEdge.edge.tangentAt(nextEdge.edge.FirstParameter)
-                return 1.0 - angle_tol < abs(eT.dot(neT)) < 1.0 + angle_tol
-            case 1:
-                eT = edge.edge.tangentAt(edge.edge.FirstParameter)
-                neT = nextEdge.edge.tangentAt(nextEdge.edge.LastParameter)
-                return 1.0 - angle_tol < abs(eT.dot(neT)) < 1.0 + angle_tol
-            case 2:
-                eT = edge.edge.tangentAt(edge.edge.LastParameter)
-                neT = nextEdge.edge.tangentAt(nextEdge.edge.FirstParameter)
-                return 1.0 - angle_tol < abs(eT.dot(neT)) < 1.0 + angle_tol
-            case 3:
-                eT = edge.edge.tangentAt(edge.edge.LastParameter)
-                neT = nextEdge.edge.tangentAt(nextEdge.edge.LastParameter)
-                return 1.0 - angle_tol < abs(eT.dot(neT)) < 1.0 + angle_tol
-            case _:
-                raise RuntimeError("Cannot check tangency!")
+        try:
+            match i:
+                case 0:
+                    eT = edge.edge.tangentAt(edge.edge.FirstParameter)
+                    neT = nextEdge.edge.tangentAt(nextEdge.edge.FirstParameter)
+                    return 1.0 - angle_tol < abs(eT.dot(neT)) < 1.0 + angle_tol
+                case 1:
+                    eT = edge.edge.tangentAt(edge.edge.FirstParameter)
+                    neT = nextEdge.edge.tangentAt(nextEdge.edge.LastParameter)
+                    return 1.0 - angle_tol < abs(eT.dot(neT)) < 1.0 + angle_tol
+                case 2:
+                    eT = edge.edge.tangentAt(edge.edge.LastParameter)
+                    neT = nextEdge.edge.tangentAt(nextEdge.edge.FirstParameter)
+                    return 1.0 - angle_tol < abs(eT.dot(neT)) < 1.0 + angle_tol
+                case 3:
+                    eT = edge.edge.tangentAt(edge.edge.LastParameter)
+                    neT = nextEdge.edge.tangentAt(nextEdge.edge.LastParameter)
+                    return 1.0 - angle_tol < abs(eT.dot(neT)) < 1.0 + angle_tol
+                case _:
+                    raise RuntimeError("Cannot check tangency!")
+        except NotImplementedError:
+            print("Small edge skiped.")
+            return False
 
     def walkTangent(self, startEdge: int, angleTol: float=1e-3) -> list[int]:
         visited: set[int] = {startEdge}
