@@ -1,31 +1,46 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard, reportUnusedImport=error, reportMissingImports=information
-from typing import Protocol, Literal
-from Part import Compound, BSplineSurface, BSplineCurve, makeLoft, makeShell, show, Vertex#, makeRuledSurface 
+# pyright: standard, reportUnusedImport=error, reportMissingImports=information
+from typing import Literal, Protocol
+
 from BOPTools.JoinAPI import connect
-from utils.PropDef import PropDef, PropertyLinkSubList, PropertyBool, PropertyInteger, PropertyFloat, PropertyEnumeration
-from utils.FreeCADInterfaces import FeatureLike, ShapeLike, Vector
+from Part import (  # , makeRuledSurface
+    BSplineCurve,
+    BSplineSurface,
+    Compound,
+    Vertex,
+    makeLoft,
+    makeShell,
+    show,
+)
+
 from utils.EdgeDef import EdgeDef
 from utils.FaceDef import FaceDef
-from utils.utils import getSelectionEx
 from utils.FaceGraph import getFaceEdgeNameMap, reverseFaceToEdgeMap
-
+from utils.FreeCADInterfaces import FeatureLike, ShapeLike, Vector
+from utils.PropDef import (
+    PropDef,
+    PropertyBool,
+    PropertyEnumeration,
+    PropertyFloat,
+    PropertyInteger,
+    PropertyLinkSubList,
+)
+from utils.utils import getSelectionEx
 
 FEATURE_NAME = "Extrapolate"
 
 
 class CurrentFeatureLike(FeatureLike, Protocol):
-    CheckShape: bool = PropertyBool("Shape", "If true, perform validity check on shape.", True) #type: ignore
-    Edges: list[tuple[FeatureLike, tuple[str]]] = PropertyLinkSubList("Input", "Edges to extrapolate from") #type: ignore
-    Fuse: bool = PropertyBool("Shape", "If true, fuse parent shape with extrapolation.", False) #type: ignore
-    Distance: float = PropertyFloat("Shape", "", 1.0) #type: ignore
-    Algorythm: Literal["Interpolate", "Approximate", "Loft"] = PropertyEnumeration("Algo", "", ["Interpolate", "Approximate", "Loft"]) #type: ignore
-    ApproxTol: float = PropertyFloat("Algo", "", 1e-3) #type: ignore
-    MinSamples: int = PropertyInteger("Discretization", "", 4) #type: ignore
-    AngularDiscTol: float = PropertyFloat("Discretization", "", 1) #type: ignore
-    CurvatureDiscTol: float = PropertyFloat("Discretization", "", 0.01) #type: ignore
-    ShowDiscVerts: bool = PropertyBool("Shape", "", False) #type: ignore
-
+    CheckShape: bool = PropertyBool("Shape", "If true, perform validity check on shape.", True)  # type: ignore
+    Edges: list[tuple[FeatureLike, tuple[str]]] = PropertyLinkSubList("Input", "Edges to extrapolate from")  # type: ignore
+    Fuse: bool = PropertyBool("Shape", "If true, fuse parent shape with extrapolation.", False)  # type: ignore
+    Distance: float = PropertyFloat("Shape", "", 1.0)  # type: ignore
+    Algorythm: Literal["Interpolate", "Approximate", "Loft"] = PropertyEnumeration("Algo", "", ["Interpolate", "Approximate", "Loft"])  # type: ignore
+    ApproxTol: float = PropertyFloat("Algo", "", 1e-3)  # type: ignore
+    MinSamples: int = PropertyInteger("Discretization", "", 4)  # type: ignore
+    AngularDiscTol: float = PropertyFloat("Discretization", "", 1)  # type: ignore
+    CurvatureDiscTol: float = PropertyFloat("Discretization", "", 0.01)  # type: ignore
+    ShowDiscVerts: bool = PropertyBool("Shape", "", False)  # type: ignore
 
 
 class Proxy:
@@ -46,20 +61,44 @@ class Proxy:
         faceToEdgeMap = getFaceEdgeNameMap(surr.Faces)
         edgeToFaceMap = reverseFaceToEdgeMap(faceToEdgeMap)
 
-        edgeDefMap = {x.hashCode(): EdgeDef(x.hashCode(), x, f"Edge{i}", edgeToFaceMap[x.hashCode()]) for i, x in enumerate(surr.Edges, start=1)}
-        faceDefMap = {x.hashCode(): FaceDef(x.hashCode(), x, f"Face{i}") for i, x in enumerate(surr.Faces, start=1)}
+        edgeDefMap = {
+            x.hashCode(): EdgeDef(
+                x.hashCode(), x, f"Edge{i}", edgeToFaceMap[x.hashCode()]
+            )
+            for i, x in enumerate(surr.Edges, start=1)
+        }
+        faceDefMap = {
+            x.hashCode(): FaceDef(x.hashCode(), x, f"Face{i}")
+            for i, x in enumerate(surr.Faces, start=1)
+        }
 
-        selectedEdges = [edgeDefMap[surrFeature.getSubObject(x).hashCode()] for x in edges]
+        selectedEdges = [
+            edgeDefMap[surrFeature.getSubObject(x).hashCode()] for x in edges
+        ]
 
-        ptsFaces: list[tuple[list[Vector], FaceDef]] = [(x.edge.discretize(Angular=obj.AngularDiscTol, Curvature=obj.CurvatureDiscTol, Minimum=obj.MinSamples), faceDefMap[x.parentFaces[0]]) for x in selectedEdges]
+        ptsFaces: list[tuple[list[Vector], FaceDef]] = [
+            (
+                x.edge.discretize(
+                    Angular=obj.AngularDiscTol,
+                    Curvature=obj.CurvatureDiscTol,
+                    Minimum=obj.MinSamples,
+                ),
+                faceDefMap[x.parentFaces[0]],
+            )
+            for x in selectedEdges
+        ]
 
         for i in range(1, len(ptsFaces)):
-            prev1 = ptsFaces[i-1][0][-1]
-            prev2 = ptsFaces[i-1][0][0]
+            prev1 = ptsFaces[i - 1][0][-1]
+            prev2 = ptsFaces[i - 1][0][0]
             nextt1 = ptsFaces[i][0][0]
             nextt2 = ptsFaces[i][0][-1]
-            d = [(prev1 - nextt1).Length, (prev1 - nextt2).Length,
-                 (prev2 - nextt1).Length, (prev2 - nextt2).Length]
+            d = [
+                (prev1 - nextt1).Length,
+                (prev1 - nextt2).Length,
+                (prev2 - nextt1).Length,
+                (prev2 - nextt2).Length,
+            ]
 
             dimin = d.index(min(d))
 
@@ -68,10 +107,10 @@ class Proxy:
             if dimin == 1:
                 ptsFaces[i][0].reverse()
             if dimin == 2:
-                ptsFaces[i-1][0].reverse()
+                ptsFaces[i - 1][0].reverse()
             if dimin == 3:
                 ptsFaces[i][0].reverse()
-                ptsFaces[i-1][0].reverse()
+                ptsFaces[i - 1][0].reverse()
 
         startPts: list[list[Vector]] = []
         midPts: list[list[Vector]] = []
@@ -81,53 +120,66 @@ class Proxy:
             tmpMidPts = []
             tmpEndPts = []
             for j in range(len(pts)):
-                uv: tuple[float, float] = face.Surface.parameter(pts[j])#type: ignore
+                uv: tuple[float, float] = face.Surface.parameter(pts[j])  # type: ignore
 
                 normal = face.topoFace.normalAt(*uv)
 
                 if j < len(pts) - 1:
-                    tangent = (pts[j] - pts[j+1]).normalize()
+                    tangent = (pts[j] - pts[j + 1]).normalize()
                 else:
-                    tangent = ((pts[j] - pts[j-1]).normalize()) * -1
+                    tangent = ((pts[j] - pts[j - 1]).normalize()) * -1
 
                 tmpStartPts.append(pts[j])
-                tmpMidPts.append(pts[j] + normal.cross(tangent).normalize()* (obj.Distance/2))
-                tmpEndPts.append(pts[j] + normal.cross(tangent).normalize()* obj.Distance)
+                tmpMidPts.append(
+                    pts[j] + normal.cross(tangent).normalize() * (obj.Distance / 2)
+                )
+                tmpEndPts.append(
+                    pts[j] + normal.cross(tangent).normalize() * obj.Distance
+                )
 
             startPts.append(tmpStartPts)
             midPts.append(tmpMidPts)
             endPts.append(tmpEndPts)
 
-
         resList = []
-        for s, m, e, edge, (pts, face) in zip(startPts, midPts, endPts, selectedEdges, ptsFaces):
+        for s, m, e, edge, (pts, face) in zip(
+            startPts, midPts, endPts, selectedEdges, ptsFaces
+        ):
             bss = BSplineSurface()
             transposed = [list(row) for row in zip(s, e)]
             transposedWithMids = [list(row) for row in zip(s, m, e)]
 
             match obj.Algorythm:
-                #case "RuledSurface":
-                    #bsc = BSplineCurve()
-                    #bsc.approximate(e)
-                    #endShape: ShapeLike = bsc.toShape()
-                    #endShape.reverse()
-                    #ruledSur: ShapeLike = makeRuledSurface(endShape, edge.edge)
+                # case "RuledSurface":
+                # bsc = BSplineCurve()
+                # bsc.approximate(e)
+                # endShape: ShapeLike = bsc.toShape()
+                # endShape.reverse()
+                # ruledSur: ShapeLike = makeRuledSurface(endShape, edge.edge)
 
-                    #uvs: list[tuple[float, float]] = [ruledSur.Faces[0].Surface.parameter(x) for x in s]
-                    #normals = all([face.topoFace.normalAt(*x).dot(ruledSur.Faces[0].normalAt(*x)) > 0 for x in uvs])
+                # uvs: list[tuple[float, float]] = [ruledSur.Faces[0].Surface.parameter(x) for x in s]
+                # normals = all([face.topoFace.normalAt(*x).dot(ruledSur.Faces[0].normalAt(*x)) > 0 for x in uvs])
 
-                    #if not normals:
-                        #ruledSur.reverse()
+                # if not normals:
+                # ruledSur.reverse()
 
-                    #resList.append(ruledSur.Faces[0])
+                # resList.append(ruledSur.Faces[0])
                 case "Loft":
                     bsc = BSplineCurve()
                     bsc.interpolate(e)
                     endShape = bsc.toShape()
                     loft: ShapeLike = makeLoft([endShape, edge.edge])
 
-                    uvs: list[tuple[float, float]] = [loft.Faces[0].Surface.parameter(x) for x in s]
-                    normals = all([face.topoFace.normalAt(*x).dot(loft.Faces[0].normalAt(*x)) > 0 for x in uvs])
+                    uvs: list[tuple[float, float]] = [
+                        loft.Faces[0].Surface.parameter(x) for x in s
+                    ]
+                    normals = all(
+                        [
+                            face.topoFace.normalAt(*x).dot(loft.Faces[0].normalAt(*x))
+                            > 0
+                            for x in uvs
+                        ]
+                    )
 
                     if not normals:
                         loft.reverse()
@@ -137,8 +189,15 @@ class Proxy:
                 case "Interpolate":
                     bss.interpolate(transposed)
                     shape = bss.toShape()
-                    uvs: list[tuple[float, float]] = [shape.Surface.parameter(x) for x in s]
-                    normals = all([face.topoFace.normalAt(*x).dot(shape.normalAt(*x)) > 0 for x in uvs])
+                    uvs: list[tuple[float, float]] = [
+                        shape.Surface.parameter(x) for x in s
+                    ]
+                    normals = all(
+                        [
+                            face.topoFace.normalAt(*x).dot(shape.normalAt(*x)) > 0
+                            for x in uvs
+                        ]
+                    )
 
                     if not normals:
                         shape.reverse()
@@ -146,10 +205,19 @@ class Proxy:
                     resList.append(shape)
 
                 case "Approximate":
-                    bss.approximate(transposedWithMids, DegMin=1, DegMax=5, Tolerance=1e-2)
+                    bss.approximate(
+                        transposedWithMids, DegMin=1, DegMax=5, Tolerance=1e-2
+                    )
                     shape = bss.toShape()
-                    uvs: list[tuple[float, float]] = [shape.Surface.parameter(x) for x in s]
-                    normals = all([face.topoFace.normalAt(*x).dot(shape.normalAt(*x)) > 0 for x in uvs])
+                    uvs: list[tuple[float, float]] = [
+                        shape.Surface.parameter(x) for x in s
+                    ]
+                    normals = all(
+                        [
+                            face.topoFace.normalAt(*x).dot(shape.normalAt(*x)) > 0
+                            for x in uvs
+                        ]
+                    )
 
                     if not normals:
                         shape.reverse()
@@ -168,17 +236,15 @@ class Proxy:
         else:
             result = Compound(resList)
 
-
         if obj.CheckShape:
             result.check()
         obj.Shape = result
         self.setViewObjectAttrs(obj)
 
     def setViewObjectAttrs(self, obj: CurrentFeatureLike) -> None:
-        obj.ViewObject.ShapeColor = (0/255, 177/255, 255/255)
-        #obj.ViewObject.LineColor = (255/255, 0/255, 255/255)
-        #obj.ViewObject.PointColor = (255/255, 0/255, 255/255)
-
+        obj.ViewObject.ShapeColor = (0 / 255, 177 / 255, 255 / 255)
+        # obj.ViewObject.LineColor = (255/255, 0/255, 255/255)
+        # obj.ViewObject.PointColor = (255/255, 0/255, 255/255)
 
     @classmethod
     def getFeatureName(cls) -> str:
@@ -187,7 +253,7 @@ class Proxy:
     def add_properties(self, obj: CurrentFeatureLike):
         properties: list[tuple[str, PropDef]] = []
         for i, _ in CurrentFeatureLike.__dict__.items():
-            if i[0] != '_':
+            if i[0] != "_":
                 att = getattr(CurrentFeatureLike, i)
                 properties.append((i, att))
 
@@ -195,7 +261,7 @@ class Proxy:
             if not hasattr(obj, name):
                 obj.addProperty(prop.type, name, prop.section, prop.description)
                 if prop.defVal:
-                    setattr(obj, name, prop.defVal) 
+                    setattr(obj, name, prop.defVal)
 
     def onChanged(self, obj: CurrentFeatureLike, prop):
         pass

@@ -1,25 +1,33 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard, reportUnusedImport=error, reportMissingImports=information
+# pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from typing import Protocol
-from Part import Compound, Vertex
-from BOPTools.GeneralFuseResult import GeneralFuseResult
-from utils.PropDef import PropDef, PropertyLinkSubList, PropertyBool, PropertyInteger, PropertyFloat
-from utils.FreeCADInterfaces import FeatureLike, ShapeLike
-from utils.EdgeDef import EdgeDef
-from utils.utils import getSelectionEx
 
+from BOPTools.GeneralFuseResult import GeneralFuseResult
+from Part import Compound, Vertex
+
+from utils.EdgeDef import EdgeDef
+from utils.FreeCADInterfaces import FeatureLike, ShapeLike
+from utils.PropDef import (
+    PropDef,
+    PropertyBool,
+    PropertyFloat,
+    PropertyInteger,
+    PropertyLinkSubList,
+)
+from utils.utils import getSelectionEx
 
 FEATURE_NAME = "ShapeFillet"
 
 
-#TODO does not work not idealy intersecting surafces
+# TODO does not work with not idealy intersecting surafces
 class CurrentFeatureLike(FeatureLike, Protocol):
-    CheckShape: bool = PropertyBool("Shape", "If true, perform validity check on shape.", True) #type: ignore
-    Fillet: bool = PropertyBool("Shape", "If true, perform fillet on intersection.", True) #type: ignore
-    Surfaces: list[tuple[FeatureLike, tuple[str]]] = PropertyLinkSubList("Input", "Surface that the wire is offseted on") #type: ignore
-    Radius: float = PropertyFloat("Shape", "Fillet radius", 1.0) #type: ignore
-    FirstChosenResult: int = PropertyInteger("Result", "", 1) #type: ignore
-    SecondChosenResult: int = PropertyInteger("Result", "", 3) #type: ignore
+    CheckShape: bool = PropertyBool("Shape", "If true, perform validity check on shape.", True)  # type: ignore
+    Fillet: bool = PropertyBool("Shape", "If true, perform fillet on intersection.", True)  # type: ignore
+    Surfaces: list[tuple[FeatureLike, tuple[str]]] = PropertyLinkSubList("Input", "Surface that the wire is offseted on")  # type: ignore
+    Radius: float = PropertyFloat("Shape", "Fillet radius", 1.0)  # type: ignore
+    FirstChosenResult: int = PropertyInteger("Result", "", 1)  # type: ignore
+    SecondChosenResult: int = PropertyInteger("Result", "", 3)  # type: ignore
+
 
 class Proxy:
     def __init__(self, obj: CurrentFeatureLike):
@@ -44,15 +52,17 @@ class Proxy:
         gr = GeneralFuseResult(listOfShapes, (pieces, map))
         gr.splitAggregates()
         comp = Compound(gr.pieces)
-        compResult = comp.Shells[obj.FirstChosenResult-1]
-        result = compResult.fuse(comp.Shells[obj.SecondChosenResult-1])
+        compResult = comp.Shells[obj.FirstChosenResult - 1]
+        result = compResult.fuse(comp.Shells[obj.SecondChosenResult - 1])
 
-        #TODO speedup new edges search
+        # TODO speedup new edges search
         edgesToFillet: list[EdgeDef] = []
         for i, edge in enumerate(result.Edges, start=1):
             e = EdgeDef(0, edge, None)
             for iEdge in intersection.Edges:
-                if all([iEdge.distToShape(Vertex(p))[0] < 1e-3 for p in e.getDefPoints ]):
+                if all(
+                    [iEdge.distToShape(Vertex(p))[0] < 1e-3 for p in e.getDefPoints]
+                ):
                     edgesToFillet.append(EdgeDef(i, edge, f"Edge{i}"))
 
         if obj.Fillet:
@@ -64,10 +74,9 @@ class Proxy:
         self.setViewObjectAttrs(obj)
 
     def setViewObjectAttrs(self, obj: CurrentFeatureLike) -> None:
-        obj.ViewObject.ShapeColor = (0/255, 177/255, 255/255)
-        #obj.ViewObject.LineColor = (255/255, 0/255, 255/255)
-        #obj.ViewObject.PointColor = (255/255, 0/255, 255/255)
-
+        obj.ViewObject.ShapeColor = (0 / 255, 177 / 255, 255 / 255)
+        # obj.ViewObject.LineColor = (255/255, 0/255, 255/255)
+        # obj.ViewObject.PointColor = (255/255, 0/255, 255/255)
 
     @classmethod
     def getFeatureName(cls) -> str:
@@ -76,7 +85,7 @@ class Proxy:
     def add_properties(self, obj: CurrentFeatureLike):
         properties: list[tuple[str, PropDef]] = []
         for i, _ in CurrentFeatureLike.__dict__.items():
-            if i[0] != '_':
+            if i[0] != "_":
                 att = getattr(CurrentFeatureLike, i)
                 properties.append((i, att))
 
@@ -84,7 +93,7 @@ class Proxy:
             if not hasattr(obj, name):
                 obj.addProperty(prop.type, name, prop.section, prop.description)
                 if prop.defVal:
-                    setattr(obj, name, prop.defVal) 
+                    setattr(obj, name, prop.defVal)
 
     def onChanged(self, obj: CurrentFeatureLike, prop):
         pass

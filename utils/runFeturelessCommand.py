@@ -1,14 +1,19 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard
-import FreeCADGui as Gui #type: ignore
-import FreeCAD as App #type: ignore
+# pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from collections.abc import Callable
+
+import FreeCAD as App
+import FreeCADGui as Gui
 
 
 def runFeaturelessCommand(proxyCommand: Callable[..., None], selectionReq: bool = True):
-    if not (doc := App.ActiveDocument): raise RuntimeError("No Active document")
-    if not (guiDoc := Gui.ActiveDocument): raise RuntimeError("No Active document")
-    if not (activeView := guiDoc.ActiveView): raise RuntimeError(f"No Active View, {type(activeView)}")
-    if selectionReq and not (sel := Gui.Selection.getSelection()): raise RuntimeError(f"No input feature selected")
+    if not (doc := App.ActiveDocument):
+        raise RuntimeError("No Active document")
+    if not (guiDoc := Gui.ActiveDocument):
+        raise RuntimeError("No Active document")
+    if not (activeView := guiDoc.ActiveView):
+        raise RuntimeError(f"No Active View, {type(activeView)}")
+    if selectionReq and not (sel := Gui.Selection.getSelection()):
+        raise RuntimeError(f"No input feature selected")
     proxyCommand()
     doc.recompute()

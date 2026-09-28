@@ -1,22 +1,31 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard, reportUnusedImport=error, reportMissingImports=information
-from typing import Protocol, Literal
-from Part import makeShell #type: ignore
-from utils.PropDef import PropDef, PropertyLinkSubList, PropertyBool, PropertyEnumeration, PropertyFloat, PropertyInteger
+# pyright: standard, reportUnusedImport=error, reportMissingImports=information
+from typing import Literal, Protocol
+
+from Part import makeShell
+
 from utils.FreeCADInterfaces import FeatureLike, ShapeLike
+from utils.PropDef import (
+    PropDef,
+    PropertyBool,
+    PropertyEnumeration,
+    PropertyFloat,
+    PropertyInteger,
+    PropertyLinkSubList,
+)
+from utils.utils import getReferencedShapes, getSelectionEx, timing
 from utils.Walker import FaceWalker
-from utils.utils import getReferencedShapes, getSelectionEx
-from utils.utils import timing
 
 FEATURE_NAME = "Extract"
 
 
 class CurrentFeatureLike(FeatureLike, Protocol):
-    CheckShape: bool = PropertyBool("Shape", "If true, perform validity check on shape.", True) #type: ignore
-    RefShapes: list[tuple[FeatureLike, tuple[str]]] = PropertyLinkSubList("Input", "Contour to be extruded") #type: ignore
-    Propagation: Literal["None", "NearestNeighbours", "Tangent"] = PropertyEnumeration("Additional", "Propagation policy", ["None", "NearestNeighbours", "Tangent"]) #type: ignore
-    AngleTol: float = PropertyFloat("Detection", "Angle tolerance", 1e-3) #type: ignore
-    EdgeSamples: int = PropertyInteger("Detection", "Number of edge split samples", 5) #type: ignore
+    CheckShape: bool = PropertyBool("Shape", "If true, perform validity check on shape.", True)  # type: ignore
+    RefShapes: list[tuple[FeatureLike, tuple[str]]] = PropertyLinkSubList("Input", "Contour to be extruded")  # type: ignore
+    Propagation: Literal["None", "NearestNeighbours", "Tangent"] = PropertyEnumeration("Additional", "Propagation policy", ["None", "NearestNeighbours", "Tangent"])  # type: ignore
+    AngleTol: float = PropertyFloat("Detection", "Angle tolerance", 1e-3)  # type: ignore
+    EdgeSamples: int = PropertyInteger("Detection", "Number of edge split samples", 5)  # type: ignore
+
 
 class Proxy:
     def __init__(self, obj: CurrentFeatureLike):
@@ -34,15 +43,21 @@ class Proxy:
         obj.Shape = currentShape
 
         facesToJoin: list[ShapeLike] = getReferencedShapes(obj.RefShapes)
-        #ODO toooo slow propably hashing is to slow
+        # ODO toooo slow propably hashing is to slow
         tgTrack = FaceWalker(currentShape)
         match obj.Propagation:
             case "NearestNeighbours":
                 nbs = tgTrack.walkNN(facesToJoin[0].hashCode())
-                result: ShapeLike = makeShell([tgTrack.HashToFace[f].topoFace for f in nbs])
+                result: ShapeLike = makeShell(
+                    [tgTrack.HashToFace[f].topoFace for f in nbs]
+                )
             case "Tangent":
-                tgHashFaces: list[int] = tgTrack.walkTangent(facesToJoin[0].hashCode(), obj.AngleTol, obj.EdgeSamples)
-                result: ShapeLike = makeShell([tgTrack.HashToFace[f].topoFace for f in tgHashFaces])
+                tgHashFaces: list[int] = tgTrack.walkTangent(
+                    facesToJoin[0].hashCode(), obj.AngleTol, obj.EdgeSamples
+                )
+                result: ShapeLike = makeShell(
+                    [tgTrack.HashToFace[f].topoFace for f in tgHashFaces]
+                )
             case _:
                 result: ShapeLike = makeShell(facesToJoin)
 
@@ -54,8 +69,7 @@ class Proxy:
         self.setViewObjectAttrs(obj)
 
     def setViewObjectAttrs(self, obj: CurrentFeatureLike) -> None:
-        obj.ViewObject.ShapeColor = (0/255, 177/255, 255/255)
-
+        obj.ViewObject.ShapeColor = (0 / 255, 177 / 255, 255 / 255)
 
     @classmethod
     def getFeatureName(cls) -> str:
@@ -64,7 +78,7 @@ class Proxy:
     def add_properties(self, obj: CurrentFeatureLike):
         properties: list[tuple[str, PropDef]] = []
         for i, _ in CurrentFeatureLike.__dict__.items():
-            if i[0] != '_':
+            if i[0] != "_":
                 att = getattr(CurrentFeatureLike, i)
                 properties.append((i, att))
 
@@ -72,7 +86,7 @@ class Proxy:
             if not hasattr(obj, name):
                 obj.addProperty(prop.type, name, prop.section, prop.description)
                 if prop.defVal:
-                    setattr(obj, name, prop.defVal) 
+                    setattr(obj, name, prop.defVal)
 
     def onChanged(self, obj: CurrentFeatureLike, prop):
         pass

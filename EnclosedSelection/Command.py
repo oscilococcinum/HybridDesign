@@ -1,25 +1,24 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard
-import FreeCADGui as Gui #type: ignore
-from FreeCAD import ActiveDocument #type: ignore
-from .Proxy import proxyCommand, FEATURE_NAME
-from utils.runFeturelessCommand import runFeaturelessCommand
+# pyright: standard, reportUnusedImport=error, reportMissingImports=information
 import os
+
+import FreeCADGui as Gui
+
+from utils.runFeturelessCommand import runFeaturelessCommand
+
+from .Proxy import FEATURE_NAME, proxyCommand
 
 
 class Command:
     iconPath: str = os.path.join(
-            os.path.dirname(__file__),
-            "..",
-            "Assets",
-            f"{FEATURE_NAME}_HybridDesign.svg"
-        )
+        os.path.dirname(__file__), "..", "Assets", f"{FEATURE_NAME}_HybridDesign.svg"
+    )
 
     def GetResources(self):
         return {
             "MenuText": f"{FEATURE_NAME}",
             "ToolTip": f"Create {FEATURE_NAME} object",
-            "Pixmap" : self.iconPath
+            "Pixmap": self.iconPath,
         }
 
     def Activated(self):
@@ -33,7 +32,4 @@ class Command:
         return FEATURE_NAME
 
 
-Gui.addCommand(
-    f"{FEATURE_NAME}",
-    Command()
-)
+Gui.addCommand(f"{FEATURE_NAME}", Command())

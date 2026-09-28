@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard
-import FreeCADGui as Gui #type: ignore
-from FreeCAD import ActiveDocument #type: ignore
+# pyright: standard, reportUnusedImport=error, reportMissingImports=information
+import FreeCADGui as Gui
+
+from utils.CreatePDFeature import createPDFeature as createFeature
+
 from .Proxy import Proxy
 from .VP import VP
-from utils.CreatePDFeature import createPDFeature as createFeature
 
 
 class Command:
@@ -13,11 +14,11 @@ class Command:
         return {
             "MenuText": f"{Proxy.getFeatureName()}",
             "ToolTip": f"Create {Proxy.getFeatureName()} object",
-            "Pixmap" : VP.iconPath
+            "Pixmap": VP.iconPath,
         }
 
     def Activated(self):
-        createFeature(Proxy, VP, selectionReq=False) #type:ignore
+        createFeature(Proxy, VP, selectionReq=False)  # type: ignore
 
     def IsActive(self):
         return True
@@ -27,7 +28,4 @@ class Command:
         return Proxy.getFeatureName()
 
 
-Gui.addCommand(
-    f"{Proxy.getFeatureName()}",
-    Command()
-)
+Gui.addCommand(f"{Proxy.getFeatureName()}", Command())

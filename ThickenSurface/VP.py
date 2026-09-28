@@ -1,18 +1,16 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard
-from .Proxy import FEATURE_NAME
-import FreeCADGui as Gui #type: ignore
+# pyright: standard, reportUnusedImport=error, reportMissingImports=information
 import os
+
+import FreeCADGui as Gui
+
+from .Proxy import FEATURE_NAME
 
 
 class VP:
     iconPath: str = os.path.join(
-            os.path.dirname(__file__),
-            "..",
-            "Assets",
-            f"{FEATURE_NAME}_HybridDesign.svg"
-        )
-
+        os.path.dirname(__file__), "..", "Assets", f"{FEATURE_NAME}_HybridDesign.svg"
+    )
 
     def __init__(self, vobj):
         vobj.Proxy = self

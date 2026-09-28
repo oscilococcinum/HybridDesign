@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard, reportUnusedImport=error, reportMissingImports=information
-import FreeCADGui as Gui #type: ignore
+# pyright: standard, reportUnusedImport=error, reportMissingImports=information
+import FreeCADGui as Gui
+
 from utils.FreeCADInterfaces import ShapeLike
-from utils.Walker import FaceWalker
 from utils.utils import getReferencedShapes, getSelectionEx
+from utils.Walker import FaceWalker
 
 FEATURE_NAME = "EnclosedSelection"
 
@@ -16,5 +17,10 @@ def proxyCommand() -> None:
     enclosure = [f.hashCode() for f in facesToJoin[1:]]
     tgHashFaces: list[int] = tgTrack.walkEnclose(facesToJoin[0].hashCode(), enclosure)
     Gui.Selection.clearSelection()
-    Gui.Selection.addSelection(sel[0][0], [tgTrack.HashToFace[f].name for f in tgHashFaces])
-    [Gui.Selection.removeSelection(sel[0][0], x) for x in [tgTrack.HashToFace[f].name for f in enclosure]]
+    Gui.Selection.addSelection(
+        sel[0][0], [tgTrack.HashToFace[f].name for f in tgHashFaces]
+    )
+    [
+        Gui.Selection.removeSelection(sel[0][0], x)
+        for x in [tgTrack.HashToFace[f].name for f in enclosure]
+    ]

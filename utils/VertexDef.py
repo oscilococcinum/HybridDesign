@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-from Part import Face #type: ignore
+# pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from dataclasses import dataclass
+
+from Part import Face
 
 
 @dataclass

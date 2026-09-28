@@ -1,18 +1,14 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard, reportUnusedImport=error, reportMissingImports=information
-from .Proxy import FEATURE_NAME
-import FreeCADGui as Gui #type: ignore
+# pyright: standard, reportUnusedImport=error, reportMissingImports=information
 import os
+
+from .Proxy import FEATURE_NAME
 
 
 class VP:
     iconPath: str = os.path.join(
-            os.path.dirname(__file__),
-            "..",
-            "Assets",
-            f"{FEATURE_NAME}_HybridDesign.svg"
-        )
-
+        os.path.dirname(__file__), "..", "Assets", f"{FEATURE_NAME}_HybridDesign.svg"
+    )
 
     def __init__(self, vobj):
         vobj.Proxy = self
@@ -24,8 +20,8 @@ class VP:
     def setupContextMenu(self, vobj, menu):
         pass
         # call PartDesign command directly
-        #action = menu.addAction("Set Tip")
-        #action.triggered.connect(lambda: Gui.runCommand("PartDesign_MoveTip"))
+        # action = menu.addAction("Set Tip")
+        # action.triggered.connect(lambda: Gui.runCommand("PartDesign_MoveTip"))
 
     def updateData(self, obj, prop):
         pass

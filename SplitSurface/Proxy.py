@@ -1,20 +1,23 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard, reportUnusedImport=error, reportMissingImports=information
+# pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from typing import Protocol
-from Part import Compound
+
 from BOPTools.GeneralFuseResult import GeneralFuseResult
-from utils.PropDef import PropDef, PropertyLinkSubList, PropertyBool, PropertyInteger
+from Part import Compound
+
 from utils.FreeCADInterfaces import FeatureLike
+from utils.PropDef import PropDef, PropertyBool, PropertyInteger, PropertyLinkSubList
 from utils.utils import getSelectionEx
 
 FEATURE_NAME = "SplitSurface"
 
 
 class CurrentFeatureLike(FeatureLike, Protocol):
-    CheckShape: bool = PropertyBool("Shape", "If true, perform validity check on shape.", True) #type: ignore
-    Surface: list[tuple[FeatureLike, tuple[str]]] = PropertyLinkSubList("Input", "Surface that will be splited") #type: ignore
-    SplitTool: list[tuple[FeatureLike, tuple[str]]] = PropertyLinkSubList("Input", "Spliting tool eg. surface") #type: ignore
-    Result: int = PropertyInteger("Result", "", 1) #type: ignore
+    CheckShape: bool = PropertyBool("Shape", "If true, perform validity check on shape.", True)  # type: ignore
+    Surface: list[tuple[FeatureLike, tuple[str]]] = PropertyLinkSubList("Input", "Surface that will be splited")  # type: ignore
+    SplitTool: list[tuple[FeatureLike, tuple[str]]] = PropertyLinkSubList("Input", "Spliting tool eg. surface")  # type: ignore
+    Result: int = PropertyInteger("Result", "", 1)  # type: ignore
+
 
 class Proxy:
     def __init__(self, obj: CurrentFeatureLike):
@@ -37,7 +40,7 @@ class Proxy:
         gr = GeneralFuseResult(listOfShapes, (pieces, map))
         gr.splitAggregates()
         comp = Compound(gr.pieces)
-        result = comp.Shells[obj.Result-1]
+        result = comp.Shells[obj.Result - 1]
 
         if obj.CheckShape:
             result.check()
@@ -45,10 +48,9 @@ class Proxy:
         self.setViewObjectAttrs(obj)
 
     def setViewObjectAttrs(self, obj: CurrentFeatureLike) -> None:
-        obj.ViewObject.ShapeColor = (0/255, 177/255, 255/255)
-        #obj.ViewObject.LineColor = (255/255, 0/255, 255/255)
-        #obj.ViewObject.PointColor = (255/255, 0/255, 255/255)
-
+        obj.ViewObject.ShapeColor = (0 / 255, 177 / 255, 255 / 255)
+        # obj.ViewObject.LineColor = (255/255, 0/255, 255/255)
+        # obj.ViewObject.PointColor = (255/255, 0/255, 255/255)
 
     @classmethod
     def getFeatureName(cls) -> str:
@@ -57,7 +59,7 @@ class Proxy:
     def add_properties(self, obj: CurrentFeatureLike):
         properties: list[tuple[str, PropDef]] = []
         for i, _ in CurrentFeatureLike.__dict__.items():
-            if i[0] != '_':
+            if i[0] != "_":
                 att = getattr(CurrentFeatureLike, i)
                 properties.append((i, att))
 
@@ -65,7 +67,7 @@ class Proxy:
             if not hasattr(obj, name):
                 obj.addProperty(prop.type, name, prop.section, prop.description)
                 if prop.defVal:
-                    setattr(obj, name, prop.defVal) 
+                    setattr(obj, name, prop.defVal)
 
     def onChanged(self, obj: CurrentFeatureLike, prop):
         pass

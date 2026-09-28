@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 # pyright: standard, reportUnusedImport=error, reportMissingImports=information
-import FreeCADGui as Gui  # type: ignore
-from FreeCAD import ActiveDocument  # type: ignore
+import FreeCADGui as Gui
 
 from utils.CreateSurfaceFeature import createSurfaceFeature as createFeature
 

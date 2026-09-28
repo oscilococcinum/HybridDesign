@@ -1,20 +1,21 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard, reportUnusedImport=error, reportMissingImports=information
+# pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from typing import Protocol
-from Part import makeShell
-from BOPTools.JoinAPI import connect
-from utils.PropDef import PropDef, PropertyLinkSubList, PropertyBool, PropertyFloat
-from utils.FreeCADInterfaces import FeatureLike
-from utils.utils import getSelectionEx
 
+from BOPTools.JoinAPI import connect
+from Part import makeShell
+
+from utils.FreeCADInterfaces import FeatureLike
+from utils.PropDef import PropDef, PropertyBool, PropertyFloat, PropertyLinkSubList
+from utils.utils import getSelectionEx
 
 FEATURE_NAME = "Join"
 
 
 class CurrentFeatureLike(FeatureLike, Protocol):
-    CheckShape: bool = PropertyBool("Shape", "If true, perform validity check on shape.", True) #type: ignore
-    Shapes: list[tuple[FeatureLike, tuple[str]]] = PropertyLinkSubList("Input", "Edges to extrapolate from") #type: ignore
-    Tol: float = PropertyFloat("Shape", "", 1e-3) #type: ignore
+    CheckShape: bool = PropertyBool("Shape", "If true, perform validity check on shape.", True)  # type: ignore
+    Shapes: list[tuple[FeatureLike, tuple[str]]] = PropertyLinkSubList("Input", "Edges to extrapolate from")  # type: ignore
+    Tol: float = PropertyFloat("Shape", "", 1e-3)  # type: ignore
 
 
 class Proxy:
@@ -27,11 +28,11 @@ class Proxy:
         if not obj.Shapes:
             obj.Shapes = getSelectionEx()
 
-            shapesT: tuple[list[FeatureLike], list[list[str]]] = tuple(list(row) for row in zip(*obj.Shapes)) #type: ignore
+            shapesT: tuple[list[FeatureLike], list[list[str]]] = tuple(list(row) for row in zip(*obj.Shapes))  # type: ignore
             for x in shapesT[0]:
                 x.Visibility = False
         else:
-            shapesT = [list(row) for row in zip(*obj.Shapes)] #type: ignore
+            shapesT = [list(row) for row in zip(*obj.Shapes)]  # type: ignore
 
         compResult = connect([x.Shape for x in shapesT[0]], obj.Tol)
         result = makeShell(compResult.Faces)
@@ -42,10 +43,9 @@ class Proxy:
         self.setViewObjectAttrs(obj)
 
     def setViewObjectAttrs(self, obj: CurrentFeatureLike) -> None:
-        obj.ViewObject.ShapeColor = (0/255, 177/255, 255/255)
-        #obj.ViewObject.LineColor = (255/255, 0/255, 255/255)
-        #obj.ViewObject.PointColor = (255/255, 0/255, 255/255)
-
+        obj.ViewObject.ShapeColor = (0 / 255, 177 / 255, 255 / 255)
+        # obj.ViewObject.LineColor = (255/255, 0/255, 255/255)
+        # obj.ViewObject.PointColor = (255/255, 0/255, 255/255)
 
     @classmethod
     def getFeatureName(cls) -> str:
@@ -54,7 +54,7 @@ class Proxy:
     def add_properties(self, obj: CurrentFeatureLike):
         properties: list[tuple[str, PropDef]] = []
         for i, _ in CurrentFeatureLike.__dict__.items():
-            if i[0] != '_':
+            if i[0] != "_":
                 att = getattr(CurrentFeatureLike, i)
                 properties.append((i, att))
 
@@ -62,7 +62,7 @@ class Proxy:
             if not hasattr(obj, name):
                 obj.addProperty(prop.type, name, prop.section, prop.description)
                 if prop.defVal:
-                    setattr(obj, name, prop.defVal) 
+                    setattr(obj, name, prop.defVal)
 
     def onChanged(self, obj: CurrentFeatureLike, prop):
         pass

@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard, reportUnusedImport=error, reportMissingImports=information
-from utils.FreeCADInterfaces import ShapeLike
-from utils.FaceDef import FaceDef
+# pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from utils.EdgeDef import EdgeDef
+from utils.FaceDef import FaceDef
+from utils.FreeCADInterfaces import ShapeLike
 from utils.VertDef import VertDef
 
 
@@ -24,6 +24,7 @@ class LazyFaceDict:
 
             raise KeyError
 
+
 class LazyEdgeDict:
     def __init__(self, edges: list[ShapeLike]):
         self._edges = edges
@@ -41,6 +42,7 @@ class LazyEdgeDict:
                     return self._cache[hash_code]
 
             raise KeyError
+
 
 class LazyVertDict:
     def __init__(self, verts: list[ShapeLike]):

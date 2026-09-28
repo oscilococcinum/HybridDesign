@@ -8,7 +8,7 @@ from typing import Any
 
 import FreeCAD as App
 import FreeCADGui as Gui
-import Part  # type: ignore
+import Part
 
 from utils.FaceDef import FaceDef
 from utils.FreeCADInterfaces import FeatureLike, ShapeLike, Vector

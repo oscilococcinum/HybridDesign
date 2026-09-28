@@ -1,10 +1,12 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 # pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from typing import Protocol
-from utils.PropDef import PropDef
-from utils.FreeCADInterfaces import FeatureLike, ShapeLike
-from utils.utils import getSelectionEx
+
 from Part import Compound
+
+from utils.FreeCADInterfaces import FeatureLike, ShapeLike
+from utils.PropDef import PropDef
+from utils.utils import getSelectionEx
 
 FEATURE_NAME = "IsolateShape"
 
@@ -23,7 +25,7 @@ class Proxy:
         sel = getSelectionEx(hideSelection=True)
 
         elements: list[ShapeLike] = []
-        for (el, subNames) in sel:
+        for el, subNames in sel:
             if subNames != (""):
                 for sName in subNames:
                     elements.append(el.getSubObject(sName))
@@ -38,7 +40,7 @@ class Proxy:
 
     def setViewObjectAttrs(self, obj: CurrentFeatureLike) -> None:
         pass
-        #obj.ViewObject.ShapeColor = (0/255, 177/255, 255/255)
+        # obj.ViewObject.ShapeColor = (0/255, 177/255, 255/255)
 
     @classmethod
     def getFeatureName(cls) -> str:
@@ -47,7 +49,7 @@ class Proxy:
     def add_properties(self, obj: CurrentFeatureLike):
         properties: list[tuple[str, PropDef]] = []
         for i, _ in CurrentFeatureLike.__dict__.items():
-            if i[0] != '_':
+            if i[0] != "_":
                 att = getattr(CurrentFeatureLike, i)
                 properties.append((i, att))
 
@@ -55,7 +57,7 @@ class Proxy:
             if not hasattr(obj, name):
                 obj.addProperty(prop.type, name, prop.section, prop.description)
                 if prop.defVal:
-                    setattr(obj, name, prop.defVal) 
+                    setattr(obj, name, prop.defVal)
 
     def onChanged(self, obj: CurrentFeatureLike, prop):
         pass
