@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 #pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from typing import Protocol, Literal
-from Part import Compound, BSplineSurface, BSplineCurve, makeLoft, makeShell
+from Part import Compound, BSplineSurface, BSplineCurve, makeLoft, makeShell, show, Vertex#, makeRuledSurface 
 from BOPTools.JoinAPI import connect
 from utils.PropDef import PropDef, PropertyLinkSubList, PropertyBool, PropertyInteger, PropertyFloat, PropertyEnumeration
 from utils.FreeCADInterfaces import FeatureLike, ShapeLike, Vector
@@ -19,11 +19,12 @@ class CurrentFeatureLike(FeatureLike, Protocol):
     Edges: list[tuple[FeatureLike, tuple[str]]] = PropertyLinkSubList("Input", "Edges to extrapolate from") #type: ignore
     Fuse: bool = PropertyBool("Shape", "If true, fuse parent shape with extrapolation.", False) #type: ignore
     Distance: float = PropertyFloat("Shape", "", 1.0) #type: ignore
-    Algorythm: Literal["Loft", "Approximate", "Interpolate"] = PropertyEnumeration("Algo", "", ["Loft", "Interpolate", "Approximate"]) #type: ignore
+    Algorythm: Literal["Interpolate", "Approximate", "Loft"] = PropertyEnumeration("Algo", "", ["Interpolate", "Approximate", "Loft"]) #type: ignore
     ApproxTol: float = PropertyFloat("Algo", "", 1e-3) #type: ignore
     MinSamples: int = PropertyInteger("Discretization", "", 4) #type: ignore
     AngularDiscTol: float = PropertyFloat("Discretization", "", 1) #type: ignore
     CurvatureDiscTol: float = PropertyFloat("Discretization", "", 0.01) #type: ignore
+    ShowDiscVerts: bool = PropertyBool("Shape", "", False) #type: ignore
 
 
 
@@ -73,9 +74,11 @@ class Proxy:
                 ptsFaces[i-1][0].reverse()
 
         startPts: list[list[Vector]] = []
+        midPts: list[list[Vector]] = []
         endPts: list[list[Vector]] = []
         for _, (pts, face) in enumerate(ptsFaces):
             tmpStartPts = []
+            tmpMidPts = []
             tmpEndPts = []
             for j in range(len(pts)):
                 uv: tuple[float, float] = face.Surface.parameter(pts[j])#type: ignore
@@ -88,18 +91,35 @@ class Proxy:
                     tangent = ((pts[j] - pts[j-1]).normalize()) * -1
 
                 tmpStartPts.append(pts[j])
+                tmpMidPts.append(pts[j] + normal.cross(tangent).normalize()* (obj.Distance/2))
                 tmpEndPts.append(pts[j] + normal.cross(tangent).normalize()* obj.Distance)
 
             startPts.append(tmpStartPts)
+            midPts.append(tmpMidPts)
             endPts.append(tmpEndPts)
 
 
         resList = []
-        for s, e, edge, (pts, face) in zip(startPts, endPts, selectedEdges, ptsFaces):
+        for s, m, e, edge, (pts, face) in zip(startPts, midPts, endPts, selectedEdges, ptsFaces):
             bss = BSplineSurface()
             transposed = [list(row) for row in zip(s, e)]
+            transposedWithMids = [list(row) for row in zip(s, m, e)]
 
             match obj.Algorythm:
+                #case "RuledSurface":
+                    #bsc = BSplineCurve()
+                    #bsc.approximate(e)
+                    #endShape: ShapeLike = bsc.toShape()
+                    #endShape.reverse()
+                    #ruledSur: ShapeLike = makeRuledSurface(endShape, edge.edge)
+
+                    #uvs: list[tuple[float, float]] = [ruledSur.Faces[0].Surface.parameter(x) for x in s]
+                    #normals = all([face.topoFace.normalAt(*x).dot(ruledSur.Faces[0].normalAt(*x)) > 0 for x in uvs])
+
+                    #if not normals:
+                        #ruledSur.reverse()
+
+                    #resList.append(ruledSur.Faces[0])
                 case "Loft":
                     bsc = BSplineCurve()
                     bsc.interpolate(e)
@@ -126,7 +146,7 @@ class Proxy:
                     resList.append(shape)
 
                 case "Approximate":
-                    bss.approximate(transposed, Tolerance=obj.ApproxTol)
+                    bss.approximate(transposedWithMids, DegMin=1, DegMax=5, Tolerance=1e-2)
                     shape = bss.toShape()
                     uvs: list[tuple[float, float]] = [shape.Surface.parameter(x) for x in s]
                     normals = all([face.topoFace.normalAt(*x).dot(shape.normalAt(*x)) > 0 for x in uvs])
@@ -138,12 +158,14 @@ class Proxy:
                 case _:
                     raise RuntimeError("No valid extrapolation algo selected!")
 
+        if obj.ShowDiscVerts:
+            show(Compound([Vertex(item) for row in startPts for item in row]))
+
         if obj.Fuse:
             resList.append(surr)
             compResult = connect(resList)
             result = makeShell(compResult.Faces)
         else:
-            # connect returns compound
             result = Compound(resList)
 
 
