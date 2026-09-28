@@ -4,15 +4,15 @@ Custom FreeCAD Workbench for advanced modeling and OCCT-powered geometry creatio
 Since CATIA has a well-known and established surfacing workflow, it might (or might not) be a good idea, to bring some of those features into FreeCAD.
 WB is in Alpha stage.
 
-<img src="/Assets/HybridDesignWorkbench.svg" width="128"/>
+<img src="Resources/Icons/HybridDesignWorkbench.svg" width="128"/>
 
 ## Features
 
 ### AutoFillet
 
-<img src="/Assets/AutoFillet_HybridDesign.svg" width="64"/>
+<img src="Resources/Icons/AutoFillet_HybridDesign.svg" width="64"/>
 
-![autofillet gif](docs/gifs/autofillet.gif)
+![autofillet gif](Resources/Media/autofillet.gif)
 
 Enables users to create fillets based on the previous feature in a PDBody.
 The edges to be filleted are selected according to the `FilterType` property.
@@ -30,9 +30,9 @@ Support for non-straight edges (e.g. arcs, B-splines) is still a work in progres
 
 ### Defeature (Parametric)
 
-<img src="/Assets/Defeature_HybridDesign.svg" width="64"/>
+<img src="Resources/Icons/Defeature_HybridDesign.svg" width="64"/>
 
-![defeature gif](docs/gifs/defeature.gif)
+![defeature gif](Resources/Media/defeature.gif)
 
 Implements the Part Defeature command within the PartDesign workflow (inside a Body) and makes it parametric.
 
@@ -45,9 +45,9 @@ Implements the Part Defeature command within the PartDesign workflow (inside a B
 
 ### Extrusion
 
-<img src="/Assets/Extrusion_HybridDesign.svg" width="64"/>
+<img src="Resources/Icons/Extrusion_HybridDesign.svg" width="64"/>
 
-![extrusion gif](docs/gifs/extrusion.gif)
+![extrusion gif](Resources/Media/extrusion.gif)
 
 An implementation of `Part::Extrude`. Still a work in progress.
 
@@ -61,9 +61,9 @@ An implementation of `Part::Extrude`. Still a work in progress.
 
 ### Extract
 
-<img src="/Assets/Extract_HybridDesign.svg" width="64"/>
+<img src="Resources/Icons/Extract_HybridDesign.svg" width="64"/>
 
-![extract gif](docs/gifs/extract.gif)
+![extract gif](Resources/Media/extract.gif)
 
 Implements surface extraction (single-face or multi-face) with filtering options.
 
@@ -78,9 +78,9 @@ The tangency filter is probably the most promising feature.
 
 ### CutSolid
 
-<img src="/Assets/CutSolid_HybridDesign.svg" width="64"/>
+<img src="Resources/Icons/CutSolid_HybridDesign.svg" width="64"/>
 
-![cutsolid gif](docs/gifs/cutsolid.gif)
+![cutsolid gif](Resources/Media/cutsolid.gif)
 
 Implements cutting a PDBody using surface objects.
 
@@ -92,9 +92,9 @@ Implements cutting a PDBody using surface objects.
 
 ### OffsetSurface
 
-<img src="/Assets/OffsetSurface_HybridDesign.svg" width="64"/>
+<img src="Resources/Icons/OffsetSurface_HybridDesign.svg" width="64"/>
 
-![suroffset gif](docs/gifs/offsetsurface.gif)
+![suroffset gif](Resources/Media/offsetsurface.gif)
 
 Implementation of the Part Offset tool.
 
@@ -106,9 +106,9 @@ Implementation of the Part Offset tool.
 
 ### Boundary
 
-<img src="/Assets/Boundary_HybridDesign.svg" width="64"/>
+<img src="Resources/Icons/Boundary_HybridDesign.svg" width="64"/>
 
-![boundary gif](docs/gifs/boundary.gif)
+![boundary gif](Resources/Media/boundary.gif)
 
 Extracts outer wires, inner wires, or any boundary wire in between.
 
@@ -120,9 +120,9 @@ Extracts outer wires, inner wires, or any boundary wire in between.
 
 ### TangentSelection
 
-<img src="/Assets/TangentSelection_HybridDesign.svg" width="64"/>
+<img src="Resources/Icons/TangentSelection_HybridDesign.svg" width="64"/>
 
-![tangentselection gif](docs/gifs/tangentselection.gif)
+![tangentselection gif](Resources/Media/tangentselection.gif)
 
 Propagates selection onto faces tangent to the seed face, until sharp corrner.
 
@@ -134,9 +134,9 @@ Propagates selection onto faces tangent to the seed face, until sharp corrner.
 
 ### EnclosedSelection
 
-<img src="/Assets/EnclosedSelection_HybridDesign.svg" width="64"/>
+<img src="Resources/Icons/EnclosedSelection_HybridDesign.svg" width="64"/>
 
-![enclosedselection gif](docs/gifs/enclosedselection.gif)
+![enclosedselection gif](Resources/Media/enclosedselection.gif)
 
 Propagates selection onto faces based on seed face until it encounters boundary faces.
 
@@ -148,9 +148,9 @@ Propagates selection onto faces based on seed face until it encounters boundary 
 
 ### ThickenSurface
 
-<img src="/Assets/ThickenSurface_HybridDesign.svg" width="64"/>
+<img src="Resources/Icons/ThickenSurface_HybridDesign.svg" width="64"/>
 
-![ThickenSurface gif](docs/gifs/thickensurface.gif)
+![ThickenSurface gif](Resources/Media/thickensurface.gif)
 
 Creates solid by offseting surface.
 
@@ -162,9 +162,9 @@ Creates solid by offseting surface.
 
 ### SplitSurface
 
-<img src="/Assets/SplitSurface_HybridDesign.svg" width="64"/>
+<img src="Resources/Icons/SplitSurface_HybridDesign.svg" width="64"/>
 
-![splitsurface gif](docs/gifs/splitsurface.gif)
+![splitsurface gif](Resources/Media/splitsurface.gif)
 
 Cuts first selected surface with second as cutting tool.
 
@@ -176,9 +176,9 @@ Cuts first selected surface with second as cutting tool.
 
 ### ShapeFillet
 
-<img src="/Assets/ShapeFillet_HybridDesign.svg" width="64"/>
+<img src="Resources/Icons/ShapeFillet_HybridDesign.svg" width="64"/>
 
-![ShapeFillet gif](docs/gifs/shapefillet.gif)
+![ShapeFillet gif](Resources/Media/shapefillet.gif)
 
 Creates fillet betwen surfaces based on intersection.
 WIP! Surfaces have to idealy intersect !
@@ -191,9 +191,9 @@ WIP! Surfaces have to idealy intersect !
 
 ### Extrapolate
 
-<img src="/Assets/Extrapolate_HybridDesign.svg" width="64"/>
+<img src="Resources/Icons/Extrapolate_HybridDesign.svg" width="64"/>
 
-![Extrapolate gif](docs/gifs/extrapolate.gif)
+![Extrapolate gif](Resources/Media/extrapolate.gif)
 
 Extrapolates shell based on selectet boundary (list of edges).
 WIP! Gaps betwen extrapolated surfaces are not filled.
@@ -204,9 +204,9 @@ WIP! Gaps betwen extrapolated surfaces are not filled.
 
 ### CurvedHelix
 
-<img src="/Assets/CurvedHelix_HybridDesign.svg" width="64"/>
+<img src="Resources/Icons/CurvedHelix_HybridDesign.svg" width="64"/>
 
-![curvedhelix gif](docs/gifs/curvedhelix.gif)
+![curvedhelix gif](Resources/Media/curvedhelix.gif)
 
 Creates curved helix along the spine.
 
