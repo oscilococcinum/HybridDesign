@@ -1,39 +1,33 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
-#pyright: standard
-import FreeCADGui as Gui #type: ignore
-from FreeCAD import ActiveDocument #type: ignore
-from .Proxy import proxyCommand, FEATURE_NAME
-from utils.runFeturelessCommand import runFeaturelessCommand
-import os
+# pyright: standard, reportUnusedImport=error, reportMissingImports=information
+import FreeCADGui as Gui
+from .Proxy import Proxy
+from .VP import VP
+from utils.CreateSurfaceFeature import createSurfaceFeature as createFeature
 
 
 class Command:
-    iconPath: str = os.path.join(
-            os.path.dirname(__file__),
-            "..",
-            "Assets",
-            f"{FEATURE_NAME}_HybridDesign.svg"
-        )
 
     def GetResources(self):
         return {
-            "MenuText": f"{FEATURE_NAME}",
-            "ToolTip": f"Create {FEATURE_NAME} object",
-            "Pixmap" : self.iconPath
+            "MenuText": f"{Proxy.getFeatureName()}",
+            "ToolTip": f"Create {Proxy.getFeatureName()} object",
+            "Pixmap" : VP.iconPath
         }
 
     def Activated(self):
-        runFeaturelessCommand(proxyCommand)
+        createFeature(Proxy, VP)
 
     def IsActive(self):
         return True
 
     @classmethod
     def getCommandName(cls) -> str:
-        return FEATURE_NAME
+        return Proxy.getFeatureName()
 
 
 Gui.addCommand(
-    f"{FEATURE_NAME}",
+    f"{Proxy.getFeatureName()}",
     Command()
 )
+
