@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 # pyright: standard, reportUnusedImport=error, reportMissingImports=information
+from collections.abc import Callable
 from typing import Literal, Protocol
 
-from Part import makeShell
+from Part import Edge, Face, Solid, Vertex, Wire, makeCompound, makeShell
 
 from ..utils.FreeCADInterfaces import FeatureLike, ShapeLike
 from ..utils.PropDef import (
@@ -14,9 +15,22 @@ from ..utils.PropDef import (
     PropertyLinkSubList,
 )
 from ..utils.utils import getReferencedShapes, getSelectionEx, timing
-from ..utils.Walker import FaceWalker
+from ..utils.Walker import EdgeWalker, FaceWalker
 
 FEATURE_NAME = "Extract"
+
+extractionReg: dict[type, Callable[[list[ShapeLike]], ShapeLike]] = {
+    Face: makeShell,
+    Edge: Wire,
+    Vertex: makeCompound,
+}
+
+
+def makeShapeWithReg(subShapes: list[ShapeLike]) -> ShapeLike:
+    if not all([type(subShapes[0]) is type(x) for x in subShapes]):
+        raise RuntimeError("Selection has to contain elements of the same type!")
+    creationFunc = extractionReg[type(subShapes[0])]
+    return creationFunc(subShapes)
 
 
 class CurrentFeatureLike(FeatureLike, Protocol):
@@ -32,34 +46,70 @@ class Proxy:
         obj.Proxy = self
         self.Type = self.getFeatureName()
         self.add_properties(obj)
+        self.elementsType: type | None = None
 
     @timing
     def execute(self, obj: CurrentFeatureLike):
         if not obj.RefShapes:
-            obj.RefShapes = getSelectionEx()
-            obj.RefShapes[0][0].Visibility = False
+            obj.RefShapes = getSelectionEx(hideSelection=True)
 
         currentShape: ShapeLike = obj.RefShapes[0][0].Shape
         obj.Shape = currentShape
 
         facesToJoin: list[ShapeLike] = getReferencedShapes(obj.RefShapes)
-        # ODO toooo slow propably hashing is to slow
-        tgTrack = FaceWalker(currentShape)
-        match obj.Propagation:
-            case "NearestNeighbours":
-                nbs = tgTrack.walkNN(facesToJoin[0].hashCode())
-                result: ShapeLike = makeShell(
-                    [tgTrack.HashToFace[f].topoFace for f in nbs]
-                )
-            case "Tangent":
-                tgHashFaces: list[int] = tgTrack.walkTangent(
-                    facesToJoin[0].hashCode(), obj.AngleTol, obj.EdgeSamples
-                )
-                result: ShapeLike = makeShell(
-                    [tgTrack.HashToFace[f].topoFace for f in tgHashFaces]
-                )
-            case _:
-                result: ShapeLike = makeShell(facesToJoin)
+
+        self.elementsType = type(facesToJoin[0])
+
+        if type(facesToJoin[0]) is Edge and obj.Propagation not in [
+            "Tangent",
+            "None",
+        ]:
+            obj.Propagation = "None"
+        elif type(facesToJoin[0]) in [Vertex, Solid]:
+            obj.Propagation = "None"
+        else:
+            pass
+
+        if type(facesToJoin[0]) is Face:
+            tgTrack = FaceWalker(currentShape)
+            match obj.Propagation:
+                case "NearestNeighbours":
+                    nbs = tgTrack.walkNN(facesToJoin[0].hashCode())
+                    result: ShapeLike = makeShapeWithReg(
+                        [tgTrack.HashToFace[f].topoFace for f in nbs]
+                    )
+                case "Tangent":
+                    tgHashFaces: list[int] = tgTrack.walkTangent(
+                        facesToJoin[0].hashCode(), obj.AngleTol, obj.EdgeSamples
+                    )
+                    result: ShapeLike = makeShapeWithReg(
+                        [tgTrack.HashToFace[f].topoFace for f in tgHashFaces]
+                    )
+                case "None":
+                    result: ShapeLike = makeShapeWithReg(facesToJoin)
+                case _:
+                    raise RuntimeError("Invalid Propagation type!")
+        elif type(facesToJoin[0]) is Edge:
+            tgTrack = EdgeWalker(currentShape)
+            match obj.Propagation:
+                case "NearestNeighbours":
+                    raise RuntimeError("Not implemented for this type of element!")
+                case "Tangent":
+                    tgHashFaces: list[int] = tgTrack.walkTangent(
+                        facesToJoin[0].hashCode(), obj.AngleTol
+                    )
+                    print(tgHashFaces)
+                    result: ShapeLike = makeShapeWithReg(
+                        [tgTrack.HashToEdge[f].edge for f in tgHashFaces]
+                    )
+                case "None":
+                    result: ShapeLike = makeShapeWithReg(facesToJoin)
+                case _:
+                    raise RuntimeError("Invalid Propagation type!")
+        elif type(facesToJoin[0]) is Vertex:
+            result: ShapeLike = makeShapeWithReg(facesToJoin)
+        else:
+            raise RuntimeError("Not implemented for this type of element!")
 
         if obj.CheckShape:
             result.check()
@@ -69,7 +119,24 @@ class Proxy:
         self.setViewObjectAttrs(obj)
 
     def setViewObjectAttrs(self, obj: CurrentFeatureLike) -> None:
-        obj.ViewObject.ShapeColor = (0 / 255, 177 / 255, 255 / 255)
+        if self.elementsType is Face:
+            obj.ViewObject.ShapeColor = (0 / 255, 177 / 255, 255 / 255)
+
+            obj.ViewObject.LineColor = (25 / 255, 25 / 255, 25 / 255)
+            obj.ViewObject.PointColor = (25 / 255, 25 / 255, 25 / 255)
+            obj.ViewObject.PointSize = 2
+        elif self.elementsType is Edge:
+            obj.ViewObject.LineColor = (255 / 255, 0 / 255, 255 / 255)
+            obj.ViewObject.PointColor = (255 / 255, 0 / 255, 255 / 255)
+
+            obj.ViewObject.ShapeColor = (114 / 255, 121 / 255, 128 / 255)
+            obj.ViewObject.PointSize = 2
+        elif self.elementsType is Vertex:
+            obj.ViewObject.PointColor = (255 / 255, 0 / 255, 255 / 255)
+            obj.ViewObject.PointSize = 4
+
+            obj.ViewObject.LineColor = (25 / 255, 25 / 255, 25 / 255)
+            obj.ViewObject.ShapeColor = (114 / 255, 121 / 255, 128 / 255)
 
     @classmethod
     def getFeatureName(cls) -> str:
@@ -88,7 +155,7 @@ class Proxy:
                 if prop.defVal:
                     setattr(obj, name, prop.defVal)
 
-    def onChanged(self, obj: CurrentFeatureLike, prop):
+    def onChanged(self, obj: CurrentFeatureLike, prop: str) -> None:
         pass
 
     def __getstate__(self):
