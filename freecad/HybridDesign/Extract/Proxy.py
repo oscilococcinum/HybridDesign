@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 # pyright: standard, reportUnusedImport=error, reportMissingImports=information
-from collections.abc import Callable
 from typing import Literal, Protocol
 
-from Part import Edge, Face, Solid, Vertex, Wire, makeCompound, makeShell
+from Part import Edge, Face, Solid, Vertex, Wire
 
 from ..utils.FreeCADInterfaces import FeatureLike, ShapeLike
+from ..utils.makeShapeReg import makeShapeWithReg
 from ..utils.PropDef import (
     PropDef,
     PropertyBool,
@@ -18,19 +18,6 @@ from ..utils.utils import getReferencedShapes, getSelectionEx, timing
 from ..utils.Walker import EdgeWalker, FaceWalker
 
 FEATURE_NAME = "Extract"
-
-extractionReg: dict[type, Callable[[list[ShapeLike]], ShapeLike]] = {
-    Face: makeShell,
-    Edge: Wire,
-    Vertex: makeCompound,
-}
-
-
-def makeShapeWithReg(subShapes: list[ShapeLike]) -> ShapeLike:
-    if not all([type(subShapes[0]) is type(x) for x in subShapes]):
-        raise RuntimeError("Selection has to contain elements of the same type!")
-    creationFunc = extractionReg[type(subShapes[0])]
-    return creationFunc(subShapes)
 
 
 class CurrentFeatureLike(FeatureLike, Protocol):
@@ -125,7 +112,7 @@ class Proxy:
             obj.ViewObject.LineColor = (25 / 255, 25 / 255, 25 / 255)
             obj.ViewObject.PointColor = (25 / 255, 25 / 255, 25 / 255)
             obj.ViewObject.PointSize = 2
-        elif self.elementsType is Edge:
+        elif self.elementsType in [Edge, Wire]:
             obj.ViewObject.LineColor = (255 / 255, 0 / 255, 255 / 255)
             obj.ViewObject.PointColor = (255 / 255, 0 / 255, 255 / 255)
 
