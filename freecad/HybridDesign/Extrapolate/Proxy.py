@@ -35,7 +35,7 @@ class CurrentFeatureLike(FeatureLike, Protocol):
     Edges: list[tuple[FeatureLike, tuple[str]]] = PropertyLinkSubList("Input", "Edges to extrapolate from")  # type: ignore
     Fuse: bool = PropertyBool("Shape", "If true, fuse parent shape with extrapolation.", False)  # type: ignore
     Distance: float = PropertyFloat("Shape", "", 1.0)  # type: ignore
-    Algorythm: Literal["Interpolate", "Approximate", "Loft"] = PropertyEnumeration("Algo", "", ["Interpolate", "Approximate", "Loft"])  # type: ignore
+    Algorythm: Literal["Interpolate", "Approximate", "Loft"] = PropertyEnumeration("Algo", "", ["Loft", "Interpolate", "Approximate"])  # type: ignore
     ApproxTol: float = PropertyFloat("Algo", "", 1e-3)  # type: ignore
     MinSamples: int = PropertyInteger("Discretization", "", 4)  # type: ignore
     AngularDiscTol: float = PropertyFloat("Discretization", "", 1)  # type: ignore
@@ -120,7 +120,8 @@ class Proxy:
             tmpMidPts = []
             tmpEndPts = []
             for j in range(len(pts)):
-                uv: tuple[float, float] = face.Surface.parameter(pts[j])  # type: ignore
+                uv = face.Surface.parameter(pts[j])
+                assert isinstance(uv, tuple)
 
                 normal = face.topoFace.normalAt(*uv)
 
@@ -150,25 +151,11 @@ class Proxy:
             transposedWithMids = [list(row) for row in zip(s, m, e)]
 
             match obj.Algorythm:
-                # case "RuledSurface":
-                # bsc = BSplineCurve()
-                # bsc.approximate(e)
-                # endShape: ShapeLike = bsc.toShape()
-                # endShape.reverse()
-                # ruledSur: ShapeLike = makeRuledSurface(endShape, edge.edge)
-
-                # uvs: list[tuple[float, float]] = [ruledSur.Faces[0].Surface.parameter(x) for x in s]
-                # normals = all([face.topoFace.normalAt(*x).dot(ruledSur.Faces[0].normalAt(*x)) > 0 for x in uvs])
-
-                # if not normals:
-                # ruledSur.reverse()
-
-                # resList.append(ruledSur.Faces[0])
                 case "Loft":
                     bsc = BSplineCurve()
                     bsc.interpolate(e)
                     endShape = bsc.toShape()
-                    loft: ShapeLike = makeLoft([endShape, edge.edge])
+                    loft: ShapeLike = makeLoft([endShape, edge.edge], ruled=True)
 
                     uvs: list[tuple[float, float]] = [
                         loft.Faces[0].Surface.parameter(x) for x in s
@@ -206,7 +193,11 @@ class Proxy:
 
                 case "Approximate":
                     bss.approximate(
-                        transposedWithMids, DegMin=1, DegMax=5, Tolerance=1e-2
+                        transposedWithMids,
+                        # Continuity=2,
+                        DegMin=1,
+                        DegMax=5,
+                        Tolerance=1e-2,
                     )
                     shape = bss.toShape()
                     uvs: list[tuple[float, float]] = [
