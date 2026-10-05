@@ -263,6 +263,8 @@ class ShapeLike(Protocol):
     @overload
     def tangentAt(self, u: float, v: float) -> Vector: ...
 
+    def makeWires(self, st: str) -> Self: ...
+
 
 class FeatureLike(Protocol):
     Proxy: Any

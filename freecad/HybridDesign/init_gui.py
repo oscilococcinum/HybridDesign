@@ -23,6 +23,7 @@ class HybridDesign(Gui.Workbench):
         from .Extract.Command import Command as ExtractCommand
         from .Extrapolate.Command import Command as ExtrapolateCommand
         from .Extrusion.Command import Command as ExtrudeCommand
+        from .Intersection.Command import Command as IntersectionCommand
         from .IsolateShape.Command import Command as IsolateShapeCommand
         from .Join.Command import Command as JoinCommand
         from .Line.Command import Command as LineCommand
@@ -74,6 +75,7 @@ class HybridDesign(Gui.Workbench):
             "Wireframe": [
                 PointCommand.getCommandName(),
                 LineCommand.getCommandName(),
+                IntersectionCommand.getCommandName(),
                 CurvedHelixCommand.getCommandName(),
                 BoundaryCommand.getCommandName(),
             ],
