@@ -11,7 +11,6 @@ class HybridDesign(Gui.Workbench):
     Icon = os.path.join(".", "Resources", "Icons", "HybridDesignWorkbench.svg")
 
     def Initialize(self):
-
         import PartDesignGui  # type: ignore
 
         from .AutoFillet.Command import Command as AutoFilletCommand
@@ -23,6 +22,7 @@ class HybridDesign(Gui.Workbench):
         from .Extract.Command import Command as ExtractCommand
         from .Extrapolate.Command import Command as ExtrapolateCommand
         from .Extrusion.Command import Command as ExtrudeCommand
+        from .Fill.Command import Command as FillCommand
         from .Intersection.Command import Command as IntersectionCommand
         from .IsolateShape.Command import Command as IsolateShapeCommand
         from .Join.Command import Command as JoinCommand
@@ -72,6 +72,7 @@ class HybridDesign(Gui.Workbench):
                 SplitSurfaceCommand.getCommandName(),
                 ExtrapolateCommand.getCommandName(),
                 JoinCommand.getCommandName(),
+                FillCommand.getCommandName(),
             ],
             "Wireframe": [
                 PointCommand.getCommandName(),
