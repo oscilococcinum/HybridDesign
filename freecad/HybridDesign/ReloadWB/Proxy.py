@@ -13,10 +13,17 @@ def proxyCommand() -> None:
     mods = [
         m
         for m in sys.modules
-        if m == "freecad.HybridDesign" or m.startswith("freecad.HybridDesign.")
+        if m.startswith("freecad.HybridDesign.") and not m.endswith("init_gui")
     ]
 
     Gui.removeWorkbench("HybridDesign")
+
     for m in sorted(mods, reverse=True):
-        # print("Reloading", m)
         importlib.reload(sys.modules[m])
+
+    import freecad.HybridDesign.init_gui as hd
+
+    importlib.reload(hd)
+    Gui.removeWorkbench("HybridDesign")
+    Gui.addWorkbench(hd.HybridDesign())
+    Gui.activateWorkbench("HybridDesign")
