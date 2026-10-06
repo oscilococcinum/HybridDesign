@@ -29,6 +29,7 @@ class HybridDesign(Gui.Workbench):
         from .Line.Command import Command as LineCommand
         from .OffsetSurface.Command import Command as OffsetSurfaceCommand
         from .Point.Command import Command as PointCommand
+        from .ReloadWB.Command import Command as ReloadWBCommand
         from .ShapeFillet.Command import Command as ShapeFilletCommand
         from .SplitSurface.Command import Command as SplitSurfaceCommand
         from .TangentSelection.Command import Command as TangencySelectionCommand
@@ -83,7 +84,10 @@ class HybridDesign(Gui.Workbench):
                 TangencySelectionCommand.getCommandName(),
                 EnclosedSelectionCommand.getCommandName(),
             ],
-            "Other": [IsolateShapeCommand.getCommandName()],
+            "Other": [
+                IsolateShapeCommand.getCommandName(),
+                ReloadWBCommand.getCommandName(),
+            ],
         }
 
         for k, v in features.items():
