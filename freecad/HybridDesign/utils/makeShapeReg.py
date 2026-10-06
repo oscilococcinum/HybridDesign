@@ -2,13 +2,21 @@
 # pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from collections.abc import Callable
 
-from Part import Edge, Face, Vertex, Wire, makeCompound, makeShell
+from Part import Edge, Face, Vertex, Wire
+from Part import __sortEdges__ as sortEdges
+from Part import makeCompound, makeShell
 
 from .FreeCADInterfaces import ShapeLike
 
+
+def makeWire(edges: list[ShapeLike]) -> Wire:
+    sortedEdges = sortEdges(edges)
+    return Wire(sortedEdges)
+
+
 extractionReg: dict[type, Callable[[list[ShapeLike]], ShapeLike]] = {
     Face: makeShell,
-    Edge: Wire,
+    Edge: makeWire,
     Vertex: makeCompound,
     Wire: Wire,
 }

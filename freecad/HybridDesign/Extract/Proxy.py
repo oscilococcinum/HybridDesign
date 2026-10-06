@@ -14,7 +14,7 @@ from ..utils.PropDef import (
     PropertyInteger,
     PropertyLinkSubList,
 )
-from ..utils.utils import getReferencedShapes, getSelectionEx, timing
+from ..utils.utils import getReferencedShapes, getSelectionEx
 from ..utils.Walker import EdgeWalker, FaceWalker
 
 FEATURE_NAME = "Extract"
@@ -35,7 +35,6 @@ class Proxy:
         self.add_properties(obj)
         self.elementsType: type | None = None
 
-    @timing
     def execute(self, obj: CurrentFeatureLike):
         if not obj.RefShapes:
             obj.RefShapes = getSelectionEx(hideSelection=True)
@@ -85,7 +84,6 @@ class Proxy:
                     tgHashFaces: list[int] = tgTrack.walkTangent(
                         facesToJoin[0].hashCode(), obj.AngleTol
                     )
-                    print(tgHashFaces)
                     result: ShapeLike = makeShapeWithReg(
                         [tgTrack.HashToEdge[f].edge for f in tgHashFaces]
                     )
