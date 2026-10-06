@@ -2,10 +2,9 @@
 # pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from collections.abc import Callable
 
-from Part import Edge, Face, Vertex, Wire
-from Part import __sortEdges__ as sortEdges
-from Part import makeCompound, makeShell
+from Part import Edge, Face, Vertex, Wire, makeCompound, makeShell
 
+from ..utils.utils import sortEdges
 from .FreeCADInterfaces import ShapeLike
 
 

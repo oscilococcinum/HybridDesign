@@ -2,15 +2,13 @@
 # pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from typing import Protocol
 
+from FreeCAD import ActiveDocument
 from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakeFilling
 from OCC.Core.GeomAbs import GeomAbs_G1
-from Part import __sortEdges__ as sortEdges
-
-from FreeCAD import ActiveDocument
 
 from ..utils.FreeCADInterfaces import FeatureLike, ShapeLike
 from ..utils.PropDef import PropDef, PropertyLinkSubList
-from ..utils.utils import getSelectionEx
+from ..utils.utils import getSelectionEx, sortEdges
 
 FEATURE_NAME = "Fill"
 
@@ -32,15 +30,11 @@ class Proxy:
         # TODO try pythonOCC egPart.__toPythonOCC__(FreeCAD.ActiveDocument.Extract.Shape)
         edgeNames = obj.Verts[0][1]
 
-        edgeDict = {
-            obj.Verts[0][0].getSubObject(name).hashCode(): name for name in edgeNames
-        }
+        edgeDict = {obj.Verts[0][0].Shape.getElement(name): name for name in edgeNames}
 
-        edges = sortEdges(
-            [obj.Verts[0][0].getSubObject(name) for name in obj.Verts[0][1]]
-        )
+        edges = sortEdges(list(edgeDict.keys()))
 
-        boudaryEdges = tuple(edgeDict[edge.hashCode()] for edge in edges)
+        boudaryEdges = tuple(edgeDict[edge] for edge in edges)
 
         fillObj = ActiveDocument.addObject("Surface::Filling", "Filling")
 
