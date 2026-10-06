@@ -3,15 +3,9 @@
 from typing import Literal, Protocol
 
 from BOPTools.JoinAPI import connect
-from Part import (
-    BSplineCurve,
-    BSplineSurface,
-    Compound,
-    Vertex,
-    makeLoft,
-    makeShell,
-    show,
-)
+from Part import BSplineCurve, BSplineSurface, Compound, Vertex
+from Part import __sortEdges__ as sortEdges
+from Part import makeLoft, makeShell, show
 
 from ..utils.EdgeDef import EdgeDef
 from ..utils.FaceDef import FaceDef
@@ -54,9 +48,16 @@ class Proxy:
             obj.Edges = getSelectionEx()
             obj.Edges[0][0].Visibility = False
 
-        surrFeature = obj.Edges[0][0]
         surr: ShapeLike = obj.Edges[0][0].Shape
         edges = obj.Edges[0][1]
+        sortedEdgeShapes = sortEdges([surr.getElement(name) for name in edges])
+
+        if len(edges) > len(sortedEdgeShapes):
+            additionalSort = True
+            edgesToExtrapolate = [surr.getElement(x) for x in edges]
+        else:
+            additionalSort = False
+            edgesToExtrapolate = sortedEdgeShapes
 
         faceToEdgeMap = getFaceEdgeNameMap(surr.Faces)
         edgeToFaceMap = reverseFaceToEdgeMap(faceToEdgeMap)
@@ -72,9 +73,7 @@ class Proxy:
             for i, x in enumerate(surr.Faces, start=1)
         }
 
-        selectedEdges = [
-            edgeDefMap[surrFeature.getSubObject(x).hashCode()] for x in edges
-        ]
+        selectedEdges = [edgeDefMap[x.hashCode()] for x in edgesToExtrapolate]
 
         ptsFaces: list[tuple[list[Vector], FaceDef]] = [
             (
@@ -88,29 +87,30 @@ class Proxy:
             for x in selectedEdges
         ]
 
-        for i in range(1, len(ptsFaces)):
-            prev1 = ptsFaces[i - 1][0][-1]
-            prev2 = ptsFaces[i - 1][0][0]
-            nextt1 = ptsFaces[i][0][0]
-            nextt2 = ptsFaces[i][0][-1]
-            d = [
-                (prev1 - nextt1).Length,
-                (prev1 - nextt2).Length,
-                (prev2 - nextt1).Length,
-                (prev2 - nextt2).Length,
-            ]
+        if additionalSort:
+            for i in range(1, len(ptsFaces)):
+                prev1 = ptsFaces[i - 1][0][-1]
+                prev2 = ptsFaces[i - 1][0][0]
+                nextt1 = ptsFaces[i][0][0]
+                nextt2 = ptsFaces[i][0][-1]
+                d = [
+                    (prev1 - nextt1).Length,
+                    (prev1 - nextt2).Length,
+                    (prev2 - nextt1).Length,
+                    (prev2 - nextt2).Length,
+                ]
 
-            dimin = d.index(min(d))
+                dimin = d.index(min(d))
 
-            if dimin == 0:
-                pass
-            if dimin == 1:
-                ptsFaces[i][0].reverse()
-            if dimin == 2:
-                ptsFaces[i - 1][0].reverse()
-            if dimin == 3:
-                ptsFaces[i][0].reverse()
-                ptsFaces[i - 1][0].reverse()
+                if dimin == 0:
+                    pass
+                if dimin == 1:
+                    ptsFaces[i][0].reverse()
+                if dimin == 2:
+                    ptsFaces[i - 1][0].reverse()
+                if dimin == 3:
+                    ptsFaces[i][0].reverse()
+                    ptsFaces[i - 1][0].reverse()
 
         startPts: list[list[Vector]] = []
         midPts: list[list[Vector]] = []
