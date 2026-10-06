@@ -6,10 +6,9 @@ from functools import wraps
 from time import time
 from typing import Any
 
+import FreeCAD as App
 import FreeCADGui as Gui
 import Part
-
-import FreeCAD as App
 
 from .FaceDef import FaceDef
 from .FreeCADInterfaces import FeatureLike, ShapeLike, Vector
@@ -171,3 +170,37 @@ def sortDiscEdgesPoints(discEdges: list[list[Vector]]) -> None:
         if dimin == 3:
             discEdges[i].reverse()
             discEdges[i - 1].reverse()
+
+
+def sortEdges(edges: list[ShapeLike]) -> list[ShapeLike]:
+    """Sorts edges without change of dir like Part.__sortEdges__. It dosent change hashCode as well"""
+    stack = edges.copy()
+    initLen = len(stack)
+    srtd = [stack.pop()]
+    reverse = False
+    i = 0
+    while stack:
+        edge = stack.pop()
+        last = srtd[-1]
+
+        if not reverse:
+            lastEnd = last.lastVertex().Point
+        else:
+            lastEnd = last.firstVertex().Point
+
+        if lastEnd == edge.firstVertex().Point:
+            i -= 1
+            srtd.append(edge)
+            reverse = False
+        elif lastEnd == edge.lastVertex().Point:
+            i -= 1
+            srtd.append(edge)
+            reverse = True
+        else:
+            stack.insert(0, edge)
+            i += 1
+            if i > initLen:
+                print("Edges not connected! Returning unsorted list of edges!")
+                return edges
+
+    return srtd
