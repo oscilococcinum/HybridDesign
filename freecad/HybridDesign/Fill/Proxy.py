@@ -105,6 +105,7 @@ class Proxy:
 
     def setViewObjectAttrs(self, obj: CurrentFeatureLike) -> None:
         obj.ViewObject.ShapeColor = (0 / 255, 177 / 255, 255 / 255)
+        obj.ViewObject.AngularDeflection = "10 deg"
         # obj.ViewObject.LineColor = (255 / 255, 0 / 255, 255 / 255)
         # obj.ViewObject.PointColor = (255 / 255, 0 / 255, 255 / 255)
         # obj.ViewObject.PointSize = 4
