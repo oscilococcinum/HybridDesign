@@ -81,7 +81,6 @@ class Proxy:
                 result = fromOCC(fill.Shape())
 
             case "G0" | _:
-                # TODO try pythonOCC egPart.__toPythonOCC__(FreeCAD.ActiveDocument.Extract.Shape)
                 edgeNames = obj.Edges[0][1]
 
                 edgeDict = {

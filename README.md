@@ -202,6 +202,21 @@ WIP! Gaps betwen extrapolated surfaces are not filled.
 
 - Edges
 
+---
+
+### Fill
+
+<img src="Resources/Icons/Fill_HybridDesign.svg" width="64"/>
+
+![Extrapolate gif](Resources/Media/fill.gif)
+
+Fills gaps in shells. Open gaps not yet implemnted.
+Supports G0 and G1 continuity.
+
+#### Supported Inputs
+
+- Edges
+
 ### CurvedHelix
 
 <img src="Resources/Icons/CurvedHelix_HybridDesign.svg" width="64"/>
