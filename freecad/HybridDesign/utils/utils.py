@@ -6,9 +6,10 @@ from functools import wraps
 from time import time
 from typing import Any
 
-import FreeCAD as App
 import FreeCADGui as Gui
 import Part
+
+import FreeCAD as App
 
 from .FaceDef import FaceDef
 from .FreeCADInterfaces import FeatureLike, ShapeLike, Vector
@@ -189,18 +190,16 @@ def sortEdges(edges: list[ShapeLike]) -> list[ShapeLike]:
             lastEnd = last.firstVertex().Point
 
         if lastEnd == edge.firstVertex().Point:
-            i -= 1
+            # i -= 1
             srtd.append(edge)
             reverse = False
         elif lastEnd == edge.lastVertex().Point:
-            i -= 1
+            # i -= 1
             srtd.append(edge)
             reverse = True
         else:
             stack.insert(0, edge)
             i += 1
-            if i > initLen:
-                print("Edges not connected! Returning unsorted list of edges!")
-                return edges
-
+            if i > initLen**2:
+                raise RuntimeError("Cannot sort not connected edges!")
     return srtd
