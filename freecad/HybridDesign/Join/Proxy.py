@@ -2,10 +2,10 @@
 # pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from typing import Protocol
 
+from BOPTools.JoinAPI import connect
 from Part import Edge, Face, Vertex, Wire
 
 from ..utils.FreeCADInterfaces import FeatureLike
-from ..utils.makeShapeReg import makeShapeWithReg
 from ..utils.PropDef import PropDef, PropertyBool, PropertyFloat, PropertyLinkSubList
 from ..utils.utils import getSelectionEx
 
@@ -36,7 +36,7 @@ class Proxy:
         fSubName = obj.Shapes[0][1][0]
         self.elementsType = type(fShape.getElement(fSubName))
 
-        result = makeShapeWithReg([x.Shape for x in shapesT[0]])
+        result = connect([x.Shape for x in shapesT[0]])
 
         if obj.CheckShape:
             result.check()

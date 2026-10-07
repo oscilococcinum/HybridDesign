@@ -2,10 +2,10 @@
 # pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from typing import Literal, Protocol
 
+from BOPTools.JoinAPI import connect
 from Part import Edge, Face, Solid, Vertex, Wire
 
 from ..utils.FreeCADInterfaces import FeatureLike, ShapeLike
-from ..utils.makeShapeReg import makeShapeWithReg
 from ..utils.PropDef import (
     PropDef,
     PropertyBool,
@@ -61,18 +61,18 @@ class Proxy:
             match obj.Propagation:
                 case "NearestNeighbours":
                     nbs = tgTrack.walkNN(facesToJoin[0].hashCode())
-                    result: ShapeLike = makeShapeWithReg(
+                    result: ShapeLike = connect(
                         [tgTrack.HashToFace[f].topoFace for f in nbs]
                     )
                 case "Tangent":
                     tgHashFaces: list[int] = tgTrack.walkTangent(
                         facesToJoin[0].hashCode(), obj.AngleTol, obj.EdgeSamples
                     )
-                    result: ShapeLike = makeShapeWithReg(
+                    result: ShapeLike = connect(
                         [tgTrack.HashToFace[f].topoFace for f in tgHashFaces]
                     )
                 case "None":
-                    result: ShapeLike = makeShapeWithReg(facesToJoin)
+                    result: ShapeLike = connect(facesToJoin)
                 case _:
                     raise RuntimeError("Invalid Propagation type!")
         elif type(facesToJoin[0]) is Edge:
@@ -84,15 +84,15 @@ class Proxy:
                     tgHashFaces: list[int] = tgTrack.walkTangent(
                         facesToJoin[0].hashCode(), obj.AngleTol
                     )
-                    result: ShapeLike = makeShapeWithReg(
+                    result: ShapeLike = connect(
                         [tgTrack.HashToEdge[f].edge for f in tgHashFaces]
                     )
                 case "None":
-                    result: ShapeLike = makeShapeWithReg(facesToJoin)
+                    result: ShapeLike = connect(facesToJoin)
                 case _:
                     raise RuntimeError("Invalid Propagation type!")
         elif type(facesToJoin[0]) is Vertex:
-            result: ShapeLike = makeShapeWithReg(facesToJoin)
+            result: ShapeLike = connect(facesToJoin)
         else:
             raise RuntimeError("Not implemented for this type of element!")
 
