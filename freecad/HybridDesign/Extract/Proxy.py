@@ -3,7 +3,7 @@
 from typing import Literal, Protocol
 
 from BOPTools.JoinAPI import connect
-from Part import Edge, Face, Solid, Vertex, Wire
+from Part import Edge, Face, Solid, Vertex, Wire, __sortEdges__, makeCompound
 
 from ..utils.FreeCADInterfaces import FeatureLike, ShapeLike
 from ..utils.PropDef import (
@@ -84,15 +84,15 @@ class Proxy:
                     tgHashFaces: list[int] = tgTrack.walkTangent(
                         facesToJoin[0].hashCode(), obj.AngleTol
                     )
-                    result: ShapeLike = connect(
-                        [tgTrack.HashToEdge[f].edge for f in tgHashFaces]
+                    result: ShapeLike = Wire(
+                        __sortEdges__([tgTrack.HashToEdge[f].edge for f in tgHashFaces])
                     )
                 case "None":
-                    result: ShapeLike = connect(facesToJoin)
+                    result: ShapeLike = Wire(__sortEdges__(facesToJoin))
                 case _:
                     raise RuntimeError("Invalid Propagation type!")
         elif type(facesToJoin[0]) is Vertex:
-            result: ShapeLike = connect(facesToJoin)
+            result: ShapeLike = makeCompound(facesToJoin)
         else:
             raise RuntimeError("Not implemented for this type of element!")
 
