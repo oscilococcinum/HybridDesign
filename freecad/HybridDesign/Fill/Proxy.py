@@ -1,20 +1,28 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 # pyright: standard, reportUnusedImport=error, reportMissingImports=information
-from typing import Protocol
+from typing import Literal, Protocol
 
-from FreeCAD import ActiveDocument
 from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakeFilling
 from OCC.Core.GeomAbs import GeomAbs_G1
+from OCC.Core.TopoDS import topods
+from Part import __fromPythonOCC__ as fromOCC
+from Part import __toPythonOCC__ as toOCC
 
-from ..utils.FreeCADInterfaces import FeatureLike, ShapeLike
-from ..utils.PropDef import PropDef, PropertyLinkSubList
+from FreeCAD import ActiveDocument
+
+from ..utils.EdgeDef import EdgeDef
+from ..utils.FaceDef import FaceDef
+from ..utils.FaceGraph import reverseFaceToEdgeMap
+from ..utils.FreeCADInterfaces import FeatureLike
+from ..utils.PropDef import PropDef, PropertyEnumeration, PropertyLinkSubList
 from ..utils.utils import getSelectionEx, sortEdges
 
 FEATURE_NAME = "Fill"
 
 
 class CurrentFeatureLike(FeatureLike, Protocol):
-    Verts: list[tuple[FeatureLike, tuple[str]]] = PropertyLinkSubList("Input", "")  # type: ignore
+    Edges: list[tuple[FeatureLike, tuple[str]]] = PropertyLinkSubList("Input", "")  # type: ignore
+    Continuity: Literal["G0", "G1"] = PropertyEnumeration("Input", "", ["G0", "G1"])  # type: ignore
 
 
 class Proxy:
@@ -24,26 +32,74 @@ class Proxy:
         self.add_properties(obj)
 
     def execute(self, obj: CurrentFeatureLike):
-        if not obj.Verts:
-            obj.Verts = getSelectionEx(hideSelection=True)
+        if not obj.Edges:
+            obj.Edges = getSelectionEx(hideSelection=True)
 
-        # TODO try pythonOCC egPart.__toPythonOCC__(FreeCAD.ActiveDocument.Extract.Shape)
-        edgeNames = obj.Verts[0][1]
+        match obj.Continuity:
+            case "G1":
 
-        edgeDict = {obj.Verts[0][0].Shape.getElement(name): name for name in edgeNames}
+                shell = obj.Edges[0][0].Shape
+                selEdgeDefs = {
+                    obj.Edges[0][0]
+                    .getSubObject(x)
+                    .hashCode(): EdgeDef(
+                        obj.Edges[0][0].getSubObject(x).hashCode(),
+                        obj.Edges[0][0].getSubObject(x),
+                        x,
+                    )
+                    for x in obj.Edges[0][1]
+                }
+                faceDefs = {
+                    f.hashCode(): FaceDef(f.hashCode(), f, f"Face{i}")
+                    for i, f in enumerate(shell.Faces, start=1)
+                }
+                edgeDefs = {
+                    f.hashCode(): EdgeDef(f.hashCode(), f, f"Edge{i}")
+                    for i, f in enumerate(shell.Edges, start=1)
+                }
 
-        edges = sortEdges(list(edgeDict.keys()))
+                faceEdgeMap = {
+                    f.hashCode(): [e.hashCode() for e in f.Edges] for f in shell.Faces
+                }
+                edgeToFaceMap = reverseFaceToEdgeMap(faceEdgeMap)
 
-        boudaryEdges = tuple(edgeDict[edge] for edge in edges)
+                occSelectedEdgesToFaces = {
+                    toOCC(edgeDefs[hsh].edge): toOCC(
+                        faceDefs[edgeToFaceMap[hsh][0]].topoFace
+                    )
+                    for hsh, _ in selEdgeDefs.items()
+                }
 
-        fillObj = ActiveDocument.addObject("Surface::Filling", "Filling")
+                fill = BRepOffsetAPI_MakeFilling()
 
-        fillObj.BoundaryEdges = [(obj.Verts[0][0], boudaryEdges)]
-        fillObj.recompute()
+                for occEdge, occFace in occSelectedEdgesToFaces.items():
+                    fill.Add(
+                        topods.Edge(occEdge), topods.Face(occFace), GeomAbs_G1, True
+                    )
 
-        result = fillObj.Shape.copy()
+                fill.Build()
+                result = fromOCC(fill.Shape())
 
-        ActiveDocument.removeObject(fillObj.Name)
+            case "G0" | _:
+                # TODO try pythonOCC egPart.__toPythonOCC__(FreeCAD.ActiveDocument.Extract.Shape)
+                edgeNames = obj.Edges[0][1]
+
+                edgeDict = {
+                    obj.Edges[0][0].Shape.getElement(name): name for name in edgeNames
+                }
+
+                edges = sortEdges(list(edgeDict.keys()))
+
+                boudaryEdges = tuple(edgeDict[edge] for edge in edges)
+
+                fillObj = ActiveDocument.addObject("Surface::Filling", "Filling")
+
+                fillObj.BoundaryEdges = [(obj.Edges[0][0], boudaryEdges)]
+                fillObj.recompute()
+
+                result = fillObj.Shape.copy()
+
+                ActiveDocument.removeObject(fillObj.Name)
 
         obj.Shape = result
         self.setViewObjectAttrs(obj)
