@@ -2,8 +2,8 @@
 <package format="1" xmlns="https://wiki.freecad.org/Package_Metadata">
   <name>HybridDesign</name>
   <description>Set of tools for surface modeling, advanced selection, hybrid design.</description>
-  <version>26.3Alpha</version>
-  <date>2026-09-28</date>
+  <version>26.2Alpha</version>
+  <date>2026-10-07</date>
   <maintainer email="gawlikbar@gmail.com">Bartlomiej Gawlik</maintainer>
   <license file="LICENSE">LGPL-2.1-or-later</license>
   <url type="repository" branch="main">https://github.com/oscilococcinum/HybridDesign</url>
