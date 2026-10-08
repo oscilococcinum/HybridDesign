@@ -78,6 +78,9 @@ class Proxy:
                     )
 
                 fill.Build()
+                if not fill.IsDone():
+                    raise RuntimeError("Cannot fill this area")
+
                 result = fromOCC(fill.Shape())
 
             case "G0" | _:
