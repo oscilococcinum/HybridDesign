@@ -3,7 +3,7 @@
 from typing import Literal, Protocol
 
 from BOPTools.JoinAPI import connect
-from Part import Edge, Face, Solid, Vertex, Wire, __sortEdges__, makeCompound
+from Part import Edge, Face, Solid, Vertex, Wire, __sortEdges__, makeCompound, makeShell
 
 from ..utils.FreeCADInterfaces import FeatureLike, ShapeLike
 from ..utils.PropDef import (
@@ -72,7 +72,7 @@ class Proxy:
                         [tgTrack.HashToFace[f].topoFace for f in tgHashFaces]
                     )
                 case "None":
-                    result: ShapeLike = connect(facesToJoin)
+                    result: ShapeLike = makeShell(facesToJoin)
                 case _:
                     raise RuntimeError("Invalid Propagation type!")
         elif type(facesToJoin[0]) is Edge:
