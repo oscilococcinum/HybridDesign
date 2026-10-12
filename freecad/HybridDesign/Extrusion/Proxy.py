@@ -7,7 +7,7 @@ from Part import Compound, makeShell
 import FreeCAD as App
 
 from ..utils.EdgeDef import EdgeDef
-from ..utils.FreeCADInterfaces import FeatureLike, ShapeLike
+from ..utils.FreeCADInterfaces import FeatureLike, ShapeLike, Vector
 from ..utils.PropDef import (
     PropDef,
     PropertyBool,
@@ -29,7 +29,7 @@ class CurrentFeatureLike(FeatureLike, Protocol):
         "Input feature or subshapes",
     )  # type: ignore
     CustomDirRef: tuple[FeatureLike, tuple[str]] = PropertyLinkSub("Direction", "Edge ref")  # type: ignore
-    Direction: Literal["X", "Y", "X", "Vector", "Custom"] = PropertyEnumeration("Direction", "Enable directional filtering", ["X", "Y", "Z", "Vector", "Custom"])  # type: ignore
+    Direction: Literal["Normal", "X", "Y", "X", "Vector", "Custom"] = PropertyEnumeration("Direction", "Enable directional filtering", ["Normal", "X", "Y", "Z", "Vector", "Custom"])  # type: ignore
     Vector: list[str] = PropertyStringList("Direction", "Custom vector dir", ["0", "0", "1"])  # type: ignore
     Magnitude: float = PropertyFloat("Direction", "Extrude magnitude.", 10.0)  # type: ignore
     ReverseMagnitude: float = PropertyFloat("Direction", "Extrude reverse direction magnitude.", 0.0)  # type: ignore
@@ -53,6 +53,29 @@ class Proxy:
         obj.Shape = currentShape
 
         match obj.Direction:
+            case "Normal":
+                planes = [w.findPlane() for w in wiresConc]  # type: ignore
+
+                if any([p is None for p in planes]):
+                    raise RuntimeError("Wire not planar, select direction explicitly!")
+
+                axes: list[Vector] = [p.Axis for p in planes]
+
+                if all([axes[0] == ax for ax in axes[1:]]):
+
+                    result: ShapeLike = currentShape.extrude(
+                        App.Vector(axes[0]) * obj.Magnitude
+                    )
+                    if obj.ReverseMagnitude != 0.0:
+                        revResult = currentShape.extrude(
+                            App.Vector(axes[0]) * -obj.ReverseMagnitude
+                        )
+                        for face in revResult.Faces:
+                            face.reverse()
+                            result.add(face)
+                else:
+                    raise RuntimeError("Wire not planar, select direction explicitly!")
+
             case "X" | "Y" | "Z":
                 dirDict = {
                     "X": (1, 0, 0),
