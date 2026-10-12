@@ -27,10 +27,10 @@ class HybridDesign(Gui.Workbench):
         from .IsolateShape.Command import Command as IsolateShapeCommand
         from .Join.Command import Command as JoinCommand
         from .Line.Command import Command as LineCommand
+        from .OffsetCurve.Command import Command as OffsetCurveCommand
         from .OffsetSurface.Command import Command as OffsetSurfaceCommand
         from .Point.Command import Command as PointCommand
-
-        # from .ReloadWB.Command import Command as ReloadWBCommand
+        from .ReloadWB.Command import Command as ReloadWBCommand
         from .ShapeFillet.Command import Command as ShapeFilletCommand
         from .SplitSurface.Command import Command as SplitSurfaceCommand
         from .TangentSelection.Command import Command as TangencySelectionCommand
@@ -81,6 +81,7 @@ class HybridDesign(Gui.Workbench):
                 IntersectionCommand.getCommandName(),
                 CurvedHelixCommand.getCommandName(),
                 BoundaryCommand.getCommandName(),
+                OffsetCurveCommand.getCommandName(),
             ],
             "Selection": [
                 TangencySelectionCommand.getCommandName(),
