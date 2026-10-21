@@ -12,6 +12,7 @@
 
   <content>
     <workbench>
+      <depend optional="false" type="python">pythonocc</depend>
       <classname>HybridDesign</classname>
       <subdirectory>./</subdirectory>
     </workbench>
