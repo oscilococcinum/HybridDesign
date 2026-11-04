@@ -30,6 +30,26 @@ from ..utils.utils import getSelectionEx, sortEdges
 FEATURE_NAME = "Extrapolate"
 
 
+def connectDistantEndPoints(endPts: list[list[Vector]], closedLoop: bool) -> None:
+    if closedLoop:
+        rrange = range(-1, len(endPts), 1)
+    else:
+        rrange = range(
+            1,
+            len(endPts),
+        )
+
+    for i in rrange:
+        prev = endPts[i - 1]
+        curr = endPts[i]
+
+        bisect = (curr[0] - prev[-1]) / 2
+        newPt = prev[-1] + bisect
+
+        prev[-1] = newPt
+        curr[0] = newPt
+
+
 class CurrentFeatureLike(FeatureLike, Protocol):
     CheckShape: bool = PropertyBool("Shape", "If true, perform validity check on shape.", True)  # type: ignore
     Edges: list[tuple[FeatureLike, tuple[str]]] = PropertyLinkSubList("Input", "Edges to extrapolate from")  # type: ignore
@@ -41,6 +61,8 @@ class CurrentFeatureLike(FeatureLike, Protocol):
     AngularDiscTol: float = PropertyFloat("Discretization", "", 1)  # type: ignore
     CurvatureDiscTol: float = PropertyFloat("Discretization", "", 0.01)  # type: ignore
     ShowDiscVerts: bool = PropertyBool("Shape", "", False)  # type: ignore
+    FillingStrategy: Literal["None", "Connect", "Fill"] = PropertyEnumeration("Algo", "", ["None", "Connect", "Fill"])  # type: ignore
+    ClosedLoop: bool = PropertyBool("Algo", "", False)  # type: ignore
 
 
 class Proxy:
@@ -141,6 +163,14 @@ class Proxy:
             startPts.append(tmpStartPts)
             midPts.append(tmpMidPts)
             endPts.append(tmpEndPts)
+
+        if obj.FillingStrategy == "Connect":
+            if obj.ClosedLoop:
+                connectDistantEndPoints(endPts, True)
+                connectDistantEndPoints(midPts, True)
+            else:
+                connectDistantEndPoints(endPts, False)
+                connectDistantEndPoints(midPts, False)
 
         resList = []
         for s, m, e, edge, (pts, face) in zip(
