@@ -13,8 +13,14 @@ import FreeCAD as App
 # from ..utils.FaceDef import FaceDef
 # from ..utils.FaceGraph import reverseFaceToEdgeMap
 from ..utils.FreeCADInterfaces import FeatureLike, ShapeLike, Vector
-from ..utils.PropDef import PropDef, PropertyFloat, PropertyInteger, PropertyLinkSubList
-from ..utils.utils import getReferencedShapes, getSelectionEx
+from ..utils.PropDef import (
+    PropDef,
+    PropertyBool,
+    PropertyFloat,
+    PropertyInteger,
+    PropertyLinkSubList,
+)
+from ..utils.utils import getSelectionEx, tryGetReferencedShapes
 
 FEATURE_NAME = "OffsetCurve"
 
@@ -36,11 +42,60 @@ def getNormals(curveD: list[Vector], face: ShapeLike) -> list[Vector]:
     return normals.copy()
 
 
+def marchGeodesicLike(
+    curveD: list[Vector], offset: float, nSteps: int, supportShape: ShapeLike
+) -> list[Vector]:
+    tangents = getTangents(curveD)
+    normals = getNormals(curveD, supportShape)
+    cross = [x.cross(y).normalize() for x, y in zip(tangents, normals)]
+
+    ds: float = offset / nSteps
+    s = 0
+    while s < offset:
+        s += ds
+
+        curveD = [x + y * ds for x, y in zip(curveD, cross)]
+        curveD = [supportShape.distToShape(Vertex(x))[1][0][1] for x in curveD]
+        tangents = getTangents(curveD)
+        normals = getNormals(curveD, supportShape)
+        cross = [x.cross(y).normalize() for x, y in zip(tangents, normals)]
+
+    return curveD.copy()
+
+
+def getStatEndDirs(
+    curveD: list[Vector], supportSurface: ShapeLike
+) -> tuple[tuple[float, float], tuple[float, float]]:
+    startUv = supportSurface.Surface.parameter(curveD[0])
+    beforeStartUv = supportSurface.Surface.parameter(curveD[1])
+    endUv = supportSurface.Surface.parameter(curveD[-1])
+    beforeEndUv = supportSurface.Surface.parameter(curveD[-2])
+
+    assert startUv is tuple
+    assert beforeStartUv is tuple
+    assert endUv is tuple
+    assert beforeEndUv is tuple
+
+    stratDir = (startUv[0] - beforeStartUv[0], startUv[1] - beforeStartUv[1])
+    endDir = (endUv[0] - beforeEndUv[0], endUv[1] - beforeEndUv[1])
+    return (stratDir, endDir)
+
+
+# def extrapolateCurveOnSurface(curveD: list[Vector], supportSurface: ShapeLike) -> list[Vector]:
+# stratDir, endDir = getStatEndDirs(curveD, supportSurface)
+
+# while True:
+# supportSurface.distToShape(Vertex(curveD[1]))[0] < 1e-3:
+
+# supportSurface.distToShape(Vertex(curveD[-1]))[0] < 1e-3:
+
+
 class CurrentFeatureLike(FeatureLike, Protocol):
     Curve: list[tuple[FeatureLike, tuple[str]]] = PropertyLinkSubList("Input", "")  # type: ignore
     Face: list[tuple[FeatureLike, tuple[str]]] = PropertyLinkSubList("Input", "")  # type: ignore
     Offset: float = PropertyFloat("Offset", "", 1.0)  # type: ignore
     Steps: int = PropertyInteger("Offset", "", 10)  # type: ignore
+    Extrapolate: bool = PropertyBool("Offset", "", True)  # type: ignore
     Samples: int = PropertyInteger("Curve", "", 10)  # type: ignore
 
 
@@ -55,27 +110,17 @@ class Proxy:
             obj.Curve = [getSelectionEx(hideSelection=False)[0]]
             obj.Face = [getSelectionEx(hideSelection=False)[1]]
 
-        curve = getReferencedShapes(obj.Curve)[0]
-        face = getReferencedShapes(obj.Face)[0]
+        curve = tryGetReferencedShapes(obj.Curve)[0]
+        face = tryGetReferencedShapes(obj.Face)[0]
 
         curveD = curve.discretize(obj.Samples)
-        tangents = getTangents(curveD)
-        normals = getNormals(curveD, face)
-        cross = [x.cross(y).normalize() for x, y in zip(tangents, normals)]
+        offCurve = marchGeodesicLike(curveD, obj.Offset, obj.Steps, face)
 
-        ds: float = obj.Offset / obj.Steps
-        s = 0
-        while s < obj.Offset:
-            s += ds
-
-            curveD = [x + y * ds for x, y in zip(curveD, cross)]
-            curveD = [face.distToShape(Vertex(x))[1][0][1] for x in curveD]
-            tangents = getTangents(curveD)
-            normals = getNormals(curveD, face)
-            cross = [x.cross(y).normalize() for x, y in zip(tangents, normals)]
+        # if obj.Extrapolate:
+        #    offCurve = extrapolateCurveOnSurface(offCurve)
 
         bsc = BSplineCurve()
-        bsc.interpolate(curveD)
+        bsc.interpolate(offCurve)
         bscs = bsc.toShape()
 
         obj.Shape = face.makeParallelProjection(bscs, App.Vector((0, 0, 1)))

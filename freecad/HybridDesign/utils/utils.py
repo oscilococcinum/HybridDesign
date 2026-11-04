@@ -16,6 +16,23 @@ from .FreeCADInterfaces import FeatureLike, ShapeLike, Vector
 from .VertexDef import VertexDef
 
 
+def tryGetReferencedShapes(
+    refShapes: list[tuple[FeatureLike, tuple[str]]],
+) -> list[ShapeLike]:
+    shapes: list[ShapeLike] = []
+
+    for feature, subnames in refShapes:
+
+        if not subnames:
+            return [feature.Shape]
+
+        for subname in subnames:
+            shape = feature.Shape.getElement(subname)
+            shapes.append(shape)
+
+    return shapes
+
+
 def getReferencedShapes(
     refShapes: list[tuple[FeatureLike, tuple[str]]],
 ) -> list[ShapeLike]:
