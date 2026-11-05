@@ -50,6 +50,66 @@ def connectDistantEndPoints(endPts: list[list[Vector]], closedLoop: bool) -> Non
         curr[0] = newPt
 
 
+def sortDiscretizedEdges(ptsFaces: list[tuple[list[Vector], FaceDef]]) -> None:
+    for i in range(1, len(ptsFaces)):
+        prev1 = ptsFaces[i - 1][0][-1]
+        prev2 = ptsFaces[i - 1][0][0]
+        nextt1 = ptsFaces[i][0][0]
+        nextt2 = ptsFaces[i][0][-1]
+        d = [
+            (prev1 - nextt1).Length,
+            (prev1 - nextt2).Length,
+            (prev2 - nextt1).Length,
+            (prev2 - nextt2).Length,
+        ]
+
+        dimin = d.index(min(d))
+
+        if dimin == 0:
+            pass
+        if dimin == 1:
+            ptsFaces[i][0].reverse()
+        if dimin == 2:
+            ptsFaces[i - 1][0].reverse()
+        if dimin == 3:
+            ptsFaces[i][0].reverse()
+            ptsFaces[i - 1][0].reverse()
+
+
+def extrapolateDiscretizedEdges(
+    ptsFaces: list[tuple[list[Vector], FaceDef]], distance: float
+) -> tuple[list[list[Vector]], list[list[Vector]], list[list[Vector]]]:
+    startPts: list[list[Vector]] = []
+    midPts: list[list[Vector]] = []
+    endPts: list[list[Vector]] = []
+    for _, (pts, face) in enumerate(ptsFaces):
+        tmpStartPts = []
+        tmpMidPts = []
+        tmpEndPts = []
+        for j in range(len(pts)):
+            uv = face.Surface.parameter(pts[j])
+            assert isinstance(uv, tuple)
+
+            normal = face.topoFace.normalAt(*uv)
+
+            if j < len(pts) - 1:
+                tangent = (pts[j] - pts[j + 1]).normalize()
+            else:
+                tangent = ((pts[j] - pts[j - 1]).normalize()) * -1
+
+            tmpStartPts.append(pts[j])
+            tmpMidPts.append(
+                pts[j] + normal.cross(tangent).normalize() * (distance / 2)
+            )
+            tmpEndPts.append(pts[j] + normal.cross(tangent).normalize() * distance)
+
+        startPts.append(tmpStartPts)
+        midPts.append(tmpMidPts)
+        endPts.append(tmpEndPts)
+
+    return (startPts, midPts, endPts)
+
+
 class CurrentFeatureLike(FeatureLike, Protocol):
     CheckShape: bool = PropertyBool("Shape", "If true, perform validity check on shape.", True)  # type: ignore
     Edges: list[tuple[FeatureLike, tuple[str]]] = PropertyLinkSubList("Input", "Edges to extrapolate from")  # type: ignore
@@ -110,59 +170,9 @@ class Proxy:
             for x in selectedEdges
         ]
 
-        for i in range(1, len(ptsFaces)):
-            prev1 = ptsFaces[i - 1][0][-1]
-            prev2 = ptsFaces[i - 1][0][0]
-            nextt1 = ptsFaces[i][0][0]
-            nextt2 = ptsFaces[i][0][-1]
-            d = [
-                (prev1 - nextt1).Length,
-                (prev1 - nextt2).Length,
-                (prev2 - nextt1).Length,
-                (prev2 - nextt2).Length,
-            ]
+        sortDiscretizedEdges(ptsFaces)
 
-            dimin = d.index(min(d))
-
-            if dimin == 0:
-                pass
-            if dimin == 1:
-                ptsFaces[i][0].reverse()
-            if dimin == 2:
-                ptsFaces[i - 1][0].reverse()
-            if dimin == 3:
-                ptsFaces[i][0].reverse()
-                ptsFaces[i - 1][0].reverse()
-
-        startPts: list[list[Vector]] = []
-        midPts: list[list[Vector]] = []
-        endPts: list[list[Vector]] = []
-        for _, (pts, face) in enumerate(ptsFaces):
-            tmpStartPts = []
-            tmpMidPts = []
-            tmpEndPts = []
-            for j in range(len(pts)):
-                uv = face.Surface.parameter(pts[j])
-                assert isinstance(uv, tuple)
-
-                normal = face.topoFace.normalAt(*uv)
-
-                if j < len(pts) - 1:
-                    tangent = (pts[j] - pts[j + 1]).normalize()
-                else:
-                    tangent = ((pts[j] - pts[j - 1]).normalize()) * -1
-
-                tmpStartPts.append(pts[j])
-                tmpMidPts.append(
-                    pts[j] + normal.cross(tangent).normalize() * (obj.Distance / 2)
-                )
-                tmpEndPts.append(
-                    pts[j] + normal.cross(tangent).normalize() * obj.Distance
-                )
-
-            startPts.append(tmpStartPts)
-            midPts.append(tmpMidPts)
-            endPts.append(tmpEndPts)
+        startPts, midPts, endPts = extrapolateDiscretizedEdges(ptsFaces, obj.Distance)
 
         if obj.FillingStrategy == "Connect":
             if obj.ClosedLoop:
@@ -173,7 +183,7 @@ class Proxy:
                 connectDistantEndPoints(midPts, False)
 
         resList = []
-        for s, m, e, edge, (pts, face) in zip(
+        for s, m, e, edge, (_, face) in zip(
             startPts, midPts, endPts, selectedEdges, ptsFaces
         ):
             bss = BSplineSurface()
