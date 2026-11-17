@@ -2,20 +2,21 @@
 # pyright: standard, reportUnusedImport=error, reportMissingImports=information
 from typing import Literal, Protocol
 
-from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakeFilling
-from OCC.Core.GeomAbs import GeomAbs_G1
-from OCC.Core.TopoDS import topods
-from Part import __fromPythonOCC__ as fromOCC
-from Part import __toPythonOCC__ as toOCC
-
 from FreeCAD import ActiveDocument
 
-from ..utils.EdgeDef import EdgeDef
-from ..utils.FaceDef import FaceDef
-from ..utils.FaceGraph import reverseFaceToEdgeMap
+# from ..utils.EdgeDef import EdgeDef
+# from ..utils.FaceDef import FaceDef
+# from ..utils.FaceGraph import reverseFaceToEdgeMap
 from ..utils.FreeCADInterfaces import FeatureLike
 from ..utils.PropDef import PropDef, PropertyEnumeration, PropertyLinkSubList
 from ..utils.utils import getSelectionEx, sortEdges
+
+# from OCC.Core.BRepOffsetAPI import BRepOffsetAPI_MakeFilling
+# from OCC.Core.GeomAbs import GeomAbs_G1
+# from OCC.Core.TopoDS import topods
+# from Part import __fromPythonOCC__ as fromOCC
+# from Part import __toPythonOCC__ as toOCC
+
 
 FEATURE_NAME = "Fill"
 
@@ -37,51 +38,54 @@ class Proxy:
 
         match obj.Continuity:
             case "G1":
+                raise RuntimeError(
+                    "Since pyrhonoccc is not shipped with freecad anymore G1 is not working"
+                )
 
-                shell = obj.Edges[0][0].Shape
-                selEdgeDefs = {
-                    obj.Edges[0][0]
-                    .getSubObject(x)
-                    .hashCode(): EdgeDef(
-                        obj.Edges[0][0].getSubObject(x).hashCode(),
-                        obj.Edges[0][0].getSubObject(x),
-                        x,
-                    )
-                    for x in obj.Edges[0][1]
-                }
-                faceDefs = {
-                    f.hashCode(): FaceDef(f.hashCode(), f, f"Face{i}")
-                    for i, f in enumerate(shell.Faces, start=1)
-                }
-                edgeDefs = {
-                    f.hashCode(): EdgeDef(f.hashCode(), f, f"Edge{i}")
-                    for i, f in enumerate(shell.Edges, start=1)
-                }
+            #    shell = obj.Edges[0][0].Shape
+            #    selEdgeDefs = {
+            #        obj.Edges[0][0]
+            #        .getSubObject(x)
+            #        .hashCode(): EdgeDef(
+            #            obj.Edges[0][0].getSubObject(x).hashCode(),
+            #            obj.Edges[0][0].getSubObject(x),
+            #            x,
+            #        )
+            #        for x in obj.Edges[0][1]
+            #    }
+            #    faceDefs = {
+            #        f.hashCode(): FaceDef(f.hashCode(), f, f"Face{i}")
+            #        for i, f in enumerate(shell.Faces, start=1)
+            #    }
+            #    edgeDefs = {
+            #        f.hashCode(): EdgeDef(f.hashCode(), f, f"Edge{i}")
+            #        for i, f in enumerate(shell.Edges, start=1)
+            #    }
 
-                faceEdgeMap = {
-                    f.hashCode(): [e.hashCode() for e in f.Edges] for f in shell.Faces
-                }
-                edgeToFaceMap = reverseFaceToEdgeMap(faceEdgeMap)
+            #    faceEdgeMap = {
+            #        f.hashCode(): [e.hashCode() for e in f.Edges] for f in shell.Faces
+            #    }
+            #    edgeToFaceMap = reverseFaceToEdgeMap(faceEdgeMap)
 
-                occSelectedEdgesToFaces = {
-                    toOCC(edgeDefs[hsh].edge): toOCC(
-                        faceDefs[edgeToFaceMap[hsh][0]].topoFace
-                    )
-                    for hsh, _ in selEdgeDefs.items()
-                }
+            #    occSelectedEdgesToFaces = {
+            #        toOCC(edgeDefs[hsh].edge): toOCC(
+            #            faceDefs[edgeToFaceMap[hsh][0]].topoFace
+            #        )
+            #        for hsh, _ in selEdgeDefs.items()
+            #    }
 
-                fill = BRepOffsetAPI_MakeFilling()
+            #    fill = BRepOffsetAPI_MakeFilling()
 
-                for occEdge, occFace in occSelectedEdgesToFaces.items():
-                    fill.Add(
-                        topods.Edge(occEdge), topods.Face(occFace), GeomAbs_G1, True
-                    )
+            #    for occEdge, occFace in occSelectedEdgesToFaces.items():
+            #        fill.Add(
+            #            topods.Edge(occEdge), topods.Face(occFace), GeomAbs_G1, True
+            #        )
 
-                fill.Build()
-                if not fill.IsDone():
-                    raise RuntimeError("Cannot fill this area")
+            #    fill.Build()
+            #    if not fill.IsDone():
+            #        raise RuntimeError("Cannot fill this area")
 
-                result = fromOCC(fill.Shape())
+            #    result = fromOCC(fill.Shape())
 
             case "G0" | _:
                 edgeNames = obj.Edges[0][1]
