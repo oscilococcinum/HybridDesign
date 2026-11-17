@@ -27,7 +27,7 @@ FEATURE_NAME = "OffsetCurve"
 
 def getTangents(curveD: list[Vector]) -> list[Vector]:
     tangents = [(curveD[i - 1] - curveD[i]).normalize() for i in range(1, len(curveD))]
-    tangents.insert(0, (curveD[-1] - curveD[-2]).normalize() * -1)
+    tangents.insert(0, (curveD[0] - curveD[1]).normalize())
 
     return tangents.copy()
 
@@ -120,7 +120,7 @@ class Proxy:
         #    offCurve = extrapolateCurveOnSurface(offCurve)
 
         bsc = BSplineCurve()
-        bsc.interpolate(offCurve)
+        bsc.approximate(offCurve, Continuity="G1", Tolerance=0.1)
         bscs = bsc.toShape()
 
         obj.Shape = face.makeParallelProjection(bscs, App.Vector((0, 0, 1)))
